@@ -207,14 +207,50 @@ var searchPoints = L.geoJson(null, {
             layer.bindPopup(feature.properties.name);
         }
     });
-function showSearchPoints (geojson) {
+var showSearchPoints = function (geojson) {
     searchPoints.clearLayers();
     searchPoints.addData(geojson);
-}
+};
+var formatResult = function (feature, el) {
+    var title = L.DomUtil.create('strong', '', el),
+        detailsContainer = L.DomUtil.create('small', '', el),
+        details = [];
+    title.innerHTML = feature.properties.label || feature.properties.name;
+    var types = {
+        housenumber: 'numéro',
+        street: 'rue',
+        locality: 'lieu-dit',
+        hamlet: 'hameau',
+        village: 'village',
+        city: 'ville',
+        commune: 'commune'
+    };
+    if (types[feature.properties.type]) L.DomUtil.create('span', 'type', title).innerHTML = types[feature.properties.type];
+    if (feature.properties.city && feature.properties.city !== feature.properties.name) {
+        details.push(feature.properties.city);
+    }
+    if (feature.properties.context) details.push(feature.properties.context);
+    detailsContainer.innerHTML = details.join(', ');
+};
+
+
+var SHORT_CITY_NAMES = ['y', 'ay', 'bu', 'by', 'eu', 'fa', 'gy', 'oo', 'oz', 'py', 'ri', 'ry', 'sy', 'ur', 'us', 'uz'];
+var photonControlOptions = {
+    resultsHandler: showSearchPoints,
+    placeholder: 'Ex. 6 quai de la tourelle cergy…',
+    position: 'topleft',
+    url: 'http://api-adresse.data.gouv.fr/search/?',
+    formatResult: formatResult,
+    noResultLabel: 'Aucun résultat',
+    minChar: function (val) {
+        return SHORT_CITY_NAMES.indexOf(val) !== -1 || val.length >= 3;
+    },
+    submitDelay: 200
+};
 
 
 // création de la carte, centrée sur la France
-map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr], editInOSMControlOptions: { position: 'bottomright' }, photonControl: true, photonControlOptions: { resultsHandler: showSearchPoints, placeholder: 'Chercher…', position: 'topleft', url: 'http://api-adresse.data.gouv.fr/search/?'} } );
+map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr], editInOSMControlOptions: { position: 'bottomright' }, photonControl: true, photonControlOptions: photonControlOptions } );
 
 
 
