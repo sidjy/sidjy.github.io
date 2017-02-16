@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<title>Interface GTFS</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+	</head>
+<body>
+<p><a href="type_of_pt.html">Home</a>
+ - <a href="get_agency_3.html">Bus</a>
+ - <a href="get_routes_3_361.html">361</a>
+ - <a href="get_trips_3_361_006006016:16_1.html">006006016:16 1</a>
+ 80409040-1169037
+</p>
+<p><button onclick="get_itin()">Itinéraire</button></p>
+<p id="load_josm"></p>
+<table id="osm"><tr>
+<th><a href="http://localhost:8111/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route%22%2F%3E%0A%3Ctag%20k%3D%22route%22%20v%3D%22bus%22%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Bus%2016%20%3A%20Razel%20%E2%86%92%20Gare%20d%27Igny%22%2F%3E%0A%3Ctag%20k%3D%22from%22%20v%3D%22Razel%22%2F%3E%0A%3Ctag%20k%3D%22to%22%20v%3D%22Gare%20d%27Igny%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%2216%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22Mobicaps%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%23FA850D%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route dans JOSM</a> (attention aux doublons)
+</th></tr>
+<tr><td>name:Bus 16 : Razel → Gare d'Igny</td></tr>
+<tr><td>from:Razel</td></tr>
+<tr><td>to:Gare d'Igny</td></tr>
+<tr><td>network:Mobicaps</td></tr>
+<tr><td>ref:16</td></tr>
+<tr><td>colour:#FA850D</td></tr>
+</table>
+<iframe name="hide" style="display: None;"></iframe>
+<div>
+<div style="width: 640px; float: left;">
+<table id="stops" class="main">
+<tr><th>name</th><th>OSM?</th><th>ajout</th><th>?</th></tr>
+
+<tr>
+<td style="background-color:#FF0000";>Razel</td>
+<td style="background-color:#0EFF00";> (node similaire à 0%) - distance 7 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.165298&right=2.165898&top=48.735013&bottom=48.734413&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Razel&select=node1722770386" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.165298&right=2.165898&top=48.735013&bottom=48.734413" onclick="map.fitBounds([[48.734413,2.165298],[48.735013,2.165898]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#59FF00";>Mairie de Saclay</td>
+<td style="background-color:#80FF00";>Saclay - Mairie (node similaire à 82%) - distance 51 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.173994&right=2.174594&top=48.730918&bottom=48.730318" onclick="map.fitBounds([[48.730318,2.173994],[48.730918,2.174594]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>La Martinière</td>
+<td style="background-color:#0EFF00";>La Martinière (node similaire à 100%) - distance 7 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.176092&right=2.176692&top=48.729105&bottom=48.728505" onclick="map.fitBounds([[48.728505,2.176092],[48.729105,2.176692]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#BCFF00";>Abbaye - Cimetière</td>
+<td style="background-color:#49FF00";>Vauhallan–Abbaye–Cimetière (node similaire à 63%) - distance 30 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.195945&right=2.196545&top=48.732842&bottom=48.732242" onclick="map.fitBounds([[48.732242,2.195945],[48.732842,2.196545]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Grands Champs - Favreuse</td>
+<td style="background-color:#08FF00";> (node similaire à 0%) - distance 5 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.201243&right=2.201843&top=48.733244&bottom=48.732644&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Grands Champs - Favreuse&select=node1722770365" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.201243&right=2.201843&top=48.733244&bottom=48.732644" onclick="map.fitBounds([[48.732644,2.201243],[48.733244,2.201843]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Mairie de Vauhallan</td>
+<td style="background-color:#0BFF00";>Mairie de Vauhallan (node similaire à 100%) - distance 6 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.204543&right=2.205143&top=48.734308&bottom=48.733708" onclick="map.fitBounds([[48.733708,2.204543],[48.734308,2.205143]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Les Castors</td>
+<td style="background-color:#06FF00";>Les Castors (node similaire à 100%) - distance 4 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.212882&right=2.213482&top=48.735863&bottom=48.735263" onclick="map.fitBounds([[48.735263,2.212882],[48.735863,2.213482]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Bouton d'or</td>
+<td style="background-color:#0BFF00";>Bouton d'Or (node similaire à 100%) - distance 6 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.216713&right=2.217313&top=48.736335&bottom=48.735735" onclick="map.fitBounds([[48.735735,2.216713],[48.736335,2.217313]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Bellevue - Kennedy</td>
+<td style="background-color:#0EFF00";>Kennedy–Bellevue (node similaire à 100%) - distance 7 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.229536&right=2.230136&top=48.738513&bottom=48.737913" onclick="map.fitBounds([[48.737913,2.229536],[48.738513,2.230136]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Mairie d'Igny</td>
+<td style="background-color:#03FF00";>Mairie d'Igny (node similaire à 100%) - distance 3 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.226567&right=2.227167&top=48.741629&bottom=48.741029" onclick="map.fitBounds([[48.741029,2.226567],[48.741629,2.227167]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF9C00";>Gare d'Igny</td>
+<td style="background-color:#10FF00";>Igny RER (node similaire à 31%) - distance 8 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.23028&right=2.23088&top=48.740329&bottom=48.739729" onclick="map.fitBounds([[48.739729,2.23028],[48.740329,2.23088]]);" target="hide">zoom JOSM</a></td>
+</tr>
+</table>
+</div>
+<div id="map" style="width: 640px; height: 400px; float: left;">
+</div></div>
+
+
+<script type='text/javascript'> // couche "osmfr" 
+var osmfr = L.tileLayer('http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', 
+{
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu cquest',
+    minZoom: 1,
+    maxZoom: 20
+});
+  
+// liste des couches de base
+var baseMaps = {
+    "Rendu FR": osmfr
+};
+var geojsonFeature ={
+  "type":"Feature",
+  "geometry": {
+	"type":"GeometryCollection",
+	"geometries": [
+	{"type":"LineString","coordinates":[[2.165598,48.734713],[2.174294,48.730618],[2.176392,48.728805],[2.196245,48.732542],[2.201543,48.732944],[2.204843,48.734008],[2.213182,48.735563],[2.217013,48.736035],[2.229836,48.738213],[2.226867,48.741329],[2.23058,48.740029]]},
+	{"type":"Point","coordinates":[2.165598,48.734713]}]},
+
+  "properties": {
+	"name":"test"
+  }
+};
+
+
+map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr] } );
+json = L.geoJSON(geojsonFeature).addTo(map); 
+
+var myStyle = {
+    "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var nodes = [];
+var legs;
+var loadurl="http://localhost:8111/load_object?referrers=true&objects=";
+
+
+function get_itin() {
+var geojsonLayer = new L.GeoJSON.AJAX("http://router.project-osrm.org/match/v1/driving/2.165598,48.734713;2.174294,48.730618;2.176392,48.728805;2.196245,48.732542;2.201543,48.732944;2.204843,48.734008;2.213182,48.735563;2.217013,48.736035;2.229836,48.738213;2.226867,48.741329;2.23058,48.740029?timestamps=1487140740;1487140860;1487140920;1487141100;1487141160;1487141220;1487141340;1487141340;1487141520;1487141580;1487141640&radiuses=20;20;20;20;20;20;20;20;20;20;20&overview=full&geometries=geojson&generate_hints=false&annotations=true",{
+	style:myStyle,
+	middleware:function(data){
+legs = data.matchings[0].legs;
+for(var i in legs) {
+nodes.push(legs[i].annotation.nodes);
+}
+
+for(i=0; i < nodes.length; i++){
+for(j=0; j < nodes[i].length; j++) {
+	loadurl += "n" + nodes[i][j] + ",";
+}
+}
+
+document.getElementById("load_josm").innerHTML = '<a href="'+loadurl+'" target="hide">Load JOSM</a>';
+
+		return data.matchings[0].geometry;
+	}
+});
+
+geojsonLayer.addTo(map);
+};
+
+
+
+map.fitBounds(json.getBounds());
+jj=json.getLayers()[0]._layers;
+
+idx=Object.keys(jj)[0]
+
+//debugger;
+var decorator = L.polylineDecorator(jj[idx]._latlngs, 
+{
+    patterns: [
+            {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: 
+{fillOpacity: 1, weight: 0}})}
+        ]
+}).addTo(map);
+
+// ajout de l'échelle
+L.control.scale().addTo(map);
+
+</script>
+
+
+</body>
+</html>

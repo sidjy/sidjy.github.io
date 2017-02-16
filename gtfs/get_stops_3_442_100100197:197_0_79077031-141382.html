@@ -1,0 +1,227 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<title>Interface GTFS</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+	</head>
+<body>
+<p><a href="type_of_pt.html">Home</a>
+ - <a href="get_agency_3.html">Bus</a>
+ - <a href="get_routes_3_442.html">442</a>
+ - <a href="get_trips_3_442_100100197:197_0.html">100100197:197 0</a>
+ 79077031-141382
+</p>
+<p><button onclick="get_itin()">Itinéraire</button></p>
+<p id="load_josm"></p>
+<table id="osm"><tr>
+<th><a href="http://localhost:8111/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route%22%2F%3E%0A%3Ctag%20k%3D%22route%22%20v%3D%22bus%22%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Bus%20197%20%3A%20Baconnets%20-%20Mirabeau%20%E2%86%92%20Descartes%22%2F%3E%0A%3Ctag%20k%3D%22from%22%20v%3D%22Baconnets%20-%20Mirabeau%22%2F%3E%0A%3Ctag%20k%3D%22to%22%20v%3D%22Descartes%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%22197%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22RATP%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%23D35E3C%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route dans JOSM</a> (attention aux doublons)
+</th></tr>
+<tr><td>name:Bus 197 : Baconnets - Mirabeau → Descartes</td></tr>
+<tr><td>from:Baconnets - Mirabeau</td></tr>
+<tr><td>to:Descartes</td></tr>
+<tr><td>network:RATP</td></tr>
+<tr><td>ref:197</td></tr>
+<tr><td>colour:#D35E3C</td></tr>
+</table>
+<iframe name="hide" style="display: None;"></iframe>
+<div>
+<div style="width: 640px; float: left;">
+<table id="stops" class="main">
+<tr><th>name</th><th>OSM?</th><th>ajout</th><th>?</th></tr>
+
+<tr>
+<td style="background-color:#FFA100";>Baconnets - Mirabeau</td>
+<td style="background-color:#FF5300";>Saussaye-Mirabeau (node similaire à 32%) - distance 166 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.298092&right=2.298692&top=48.740685&bottom=48.740085" onclick="map.fitBounds([[48.740085,2.298092],[48.740685,2.298692]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Rue de Massy-Mirabeau</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.742039&lon=2.296556&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Rue de Massy-Mirabeau" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.296256&right=2.296856&top=48.742339&bottom=48.741739" onclick="map.fitBounds([[48.741739,2.296256],[48.742339,2.296856]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Les Baconnets-RER</td>
+<td style="background-color:#44FF00";>Les Baconnets RER (node similaire à 100%) - distance 28 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.288974&right=2.289574&top=48.740026&bottom=48.739426" onclick="map.fitBounds([[48.739426,2.288974],[48.740026,2.289574]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Centre Commercial des Baconnets</td>
+<td style="background-color:#0EFF00";> (node similaire à 0%) - distance 7 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.289858&right=2.290458&top=48.738606&bottom=48.738006&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Centre Commercial des Baconnets&select=node1477030230" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.289858&right=2.290458&top=48.738606&bottom=48.738006" onclick="map.fitBounds([[48.738006,2.289858],[48.738606,2.290458]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Mont Blanc</td>
+<td style="background-color:#3FFF00";>Mont-Blanc (node similaire à 100%) - distance 26 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.287399&right=2.287999&top=48.737994&bottom=48.737394" onclick="map.fitBounds([[48.737394,2.287399],[48.737994,2.287999]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF9C00";>Centre Commercial - Noyer Dore</td>
+<td style="background-color:#56FF00";>Noyer Doré (node similaire à 31%) - distance 35 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.284398&right=2.284998&top=48.735925&bottom=48.735325" onclick="map.fitBounds([[48.735325,2.284398],[48.735925,2.284998]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFF400";>Centre Sportif Lionel Terray</td>
+<td style="background-color:#51FF00";>Lionel Terray (node similaire à 48%) - distance 33 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.287375&right=2.287975&top=48.735306&bottom=48.734706" onclick="map.fitBounds([[48.734706,2.287375],[48.735306,2.287975]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Kennedy - Bourgogne</td>
+<td style="background-color:#95FF00";> (node similaire à 0%) - distance 59 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.291953&right=2.292553&top=48.736575&bottom=48.735975&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Kennedy - Bourgogne&select=node1477030070" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.291953&right=2.292553&top=48.736575&bottom=48.735975" onclick="map.fitBounds([[48.735975,2.291953],[48.736575,2.292553]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Saussaye - Mirabeau</td>
+<td style="background-color:#22FF00";>Saussaye-Mirabeau (node similaire à 100%) - distance 15 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.298678&right=2.299278&top=48.739104&bottom=48.738504" onclick="map.fitBounds([[48.738504,2.298678],[48.739104,2.299278]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Petit Massy</td>
+<td style="background-color:#2DFF00";>Petit Massy (node similaire à 100%) - distance 19 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.301449&right=2.302049&top=48.740516&bottom=48.739916" onclick="map.fitBounds([[48.739916,2.301449],[48.740516,2.302049]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF4800";>College des Rabats</td>
+<td style="background-color:#00FF00";>Collège Henri-Georges Adam (node similaire à 15%) - distance 1 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.305309&right=2.305909&top=48.739636&bottom=48.739036" onclick="map.fitBounds([[48.739036,2.305309],[48.739636,2.305909]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFFF00";>Aubepine</td>
+<td style="background-color:#1DFF00";>Aubépine (node similaire à 50%) - distance 13 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.310811&right=2.311411&top=48.743583&bottom=48.742983" onclick="map.fitBounds([[48.742983,2.310811],[48.743583,2.311411]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Les Rabats - Armand Guillebaud</td>
+<td style="background-color:#A4FF00";> (node similaire à 0%) - distance 65 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.313501&right=2.314101&top=48.745642&bottom=48.745042&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Les Rabats - Armand Guillebaud&select=node2328545009" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.313501&right=2.314101&top=48.745642&bottom=48.745042" onclick="map.fitBounds([[48.745042,2.313501],[48.745642,2.314101]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Descartes</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.74819&lon=2.308702&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Descartes" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.308402&right=2.309002&top=48.74849&bottom=48.74789" onclick="map.fitBounds([[48.74789,2.308402],[48.74849,2.309002]]);" target="hide">zoom JOSM</a></td>
+</tr>
+</table>
+</div>
+<div id="map" style="width: 640px; height: 400px; float: left;">
+</div></div>
+
+
+<script type='text/javascript'> // couche "osmfr" 
+var osmfr = L.tileLayer('http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', 
+{
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu cquest',
+    minZoom: 1,
+    maxZoom: 20
+});
+  
+// liste des couches de base
+var baseMaps = {
+    "Rendu FR": osmfr
+};
+var geojsonFeature ={
+  "type":"Feature",
+  "geometry": {
+	"type":"GeometryCollection",
+	"geometries": [
+	{"type":"LineString","coordinates":[[2.298392,48.740385],[2.296556,48.742039],[2.289274,48.739726],[2.290158,48.738306],[2.287699,48.737694],[2.284698,48.735625],[2.287675,48.735006],[2.292253,48.736275],[2.298978,48.738804],[2.301749,48.740216],[2.305609,48.739336],[2.311111,48.743283],[2.313801,48.745342],[2.308702,48.74819]]},
+	{"type":"Point","coordinates":[2.298392,48.740385]}]},
+
+  "properties": {
+	"name":"test"
+  }
+};
+
+
+map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr] } );
+json = L.geoJSON(geojsonFeature).addTo(map); 
+
+var myStyle = {
+    "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var nodes = [];
+var legs;
+var loadurl="http://localhost:8111/load_object?referrers=true&objects=";
+
+
+function get_itin() {
+var geojsonLayer = new L.GeoJSON.AJAX("http://router.project-osrm.org/match/v1/driving/2.298392,48.740385;2.296556,48.742039;2.289274,48.739726;2.290158,48.738306;2.287699,48.737694;2.284698,48.735625;2.287675,48.735006;2.292253,48.736275;2.298978,48.738804;2.301749,48.740216;2.305609,48.739336;2.311111,48.743283;2.313801,48.745342;2.308702,48.74819?timestamps=1487143380;1487143440;1487143620;1487143680;1487143740;1487143860;1487143920;1487144040;1487144160;1487144220;1487144340;1487144460;1487144460;1487144580&radiuses=20;20;20;20;20;20;20;20;20;20;20;20;20;20&overview=full&geometries=geojson&generate_hints=false&annotations=true",{
+	style:myStyle,
+	middleware:function(data){
+legs = data.matchings[0].legs;
+for(var i in legs) {
+nodes.push(legs[i].annotation.nodes);
+}
+
+for(i=0; i < nodes.length; i++){
+for(j=0; j < nodes[i].length; j++) {
+	loadurl += "n" + nodes[i][j] + ",";
+}
+}
+
+document.getElementById("load_josm").innerHTML = '<a href="'+loadurl+'" target="hide">Load JOSM</a>';
+
+		return data.matchings[0].geometry;
+	}
+});
+
+geojsonLayer.addTo(map);
+};
+
+
+
+map.fitBounds(json.getBounds());
+jj=json.getLayers()[0]._layers;
+
+idx=Object.keys(jj)[0]
+
+//debugger;
+var decorator = L.polylineDecorator(jj[idx]._latlngs, 
+{
+    patterns: [
+            {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: 
+{fillOpacity: 1, weight: 0}})}
+        ]
+}).addTo(map);
+
+// ajout de l'échelle
+L.control.scale().addTo(map);
+
+</script>
+
+
+</body>
+</html>

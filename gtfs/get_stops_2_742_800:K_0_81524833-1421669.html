@@ -1,0 +1,197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<title>Interface GTFS</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+	</head>
+<body>
+<p><a href="type_of_pt.html">Home</a>
+ - <a href="get_agency_2.html">Train</a>
+ - <a href="get_routes_2_742.html">742</a>
+ - <a href="get_trips_2_742_800:K_0.html">800:K 0</a>
+ 81524833-1421669
+</p>
+<p><button onclick="get_itin()">Itinéraire</button></p>
+<p id="load_josm"></p>
+<table id="osm"><tr>
+<th><a href="http://localhost:8111/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route%22%2F%3E%0A%3Ctag%20k%3D%22route%22%20v%3D%22bus%22%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Train%20K%20%3A%20Gare%20du%20Nord%20Surface%20%E2%86%92%20Gare%20de%20Crepy%20en%20Valois%22%2F%3E%0A%3Ctag%20k%3D%22from%22%20v%3D%22Gare%20du%20Nord%20Surface%22%2F%3E%0A%3Ctag%20k%3D%22to%22%20v%3D%22Gare%20de%20Crepy%20en%20Valois%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%22K%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22TRAIN%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%23C2AC38%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route dans JOSM</a> (attention aux doublons)
+</th></tr>
+<tr><td>name:Train K : Gare du Nord Surface → Gare de Crepy en Valois</td></tr>
+<tr><td>from:Gare du Nord Surface</td></tr>
+<tr><td>to:Gare de Crepy en Valois</td></tr>
+<tr><td>network:TRAIN</td></tr>
+<tr><td>ref:K</td></tr>
+<tr><td>colour:#C2AC38</td></tr>
+</table>
+<iframe name="hide" style="display: None;"></iframe>
+<div>
+<div style="width: 640px; float: left;">
+<table id="stops" class="main">
+<tr><th>name</th><th>OSM?</th><th>ajout</th><th>?</th></tr>
+
+<tr>
+<td style="background-color:#FF0000";>Gare du Nord Surface</td>
+<td style="background-color:#FF8900";>Magenta (node similaire à 0%) - distance 145 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.356422&right=2.357022&top=48.881145&bottom=48.880545&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Gare du Nord Surface&select=node329974472" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.356422&right=2.357022&top=48.881145&bottom=48.880545" onclick="map.fitBounds([[48.880545,2.356422],[48.881145,2.357022]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#92FF00";>Gare d'Aulnay Sous Bois</td>
+<td style="background-color:#85FF00";>Aulnay-sous-Bois (node similaire à 71%) - distance 53 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.495455&right=2.496055&top=48.932414&bottom=48.931814" onclick="map.fitBounds([[48.931814,2.495455],[48.932414,2.496055]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#CBFF00";>Gare de Mitry Claye</td>
+<td style="background-color:#10FF00";>Mitry-Claye (node similaire à 60%) - distance 8 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.642106&right=2.642706&top=48.976159&bottom=48.975559" onclick="map.fitBounds([[48.975559,2.642106],[48.976159,2.642706]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFFF00";>Gare de Compans</td>
+<td style="background-color:#3FFF00";>Compans (node similaire à 50%) - distance 26 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.66476&right=2.66536&top=48.991691&bottom=48.991091" onclick="map.fitBounds([[48.991091,2.66476],[48.991691,2.66536]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#97FF00";>Gare de Thieux Nantouillet</td>
+<td style="background-color:#66FF00";>Thieux - Nantouillet (node similaire à 70%) - distance 41 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.679952&right=2.680552&top=49.008414&bottom=49.007814" onclick="map.fitBounds([[49.007814,2.679952],[49.008414,2.680552]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#C6FF00";>Gare de Dammartin Juilly St Mard</td>
+<td style="background-color:#90FF00";>Dammartin-Juilly-Saint-Mard (node similaire à 61%) - distance 57 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.699153&right=2.699753&top=49.032874&bottom=49.032274" onclick="map.fitBounds([[49.032274,2.699153],[49.032874,2.699753]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Gare du Plessis Belleville</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=49.096121&lon=2.744686&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Gare du Plessis Belleville" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.744386&right=2.744986&top=49.096421&bottom=49.095821" onclick="map.fitBounds([[49.095821,2.744386],[49.096421,2.744986]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Gare de Nanteuil le Haudoin</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=49.142827&lon=2.794553&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Gare de Nanteuil le Haudoin" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.794253&right=2.794853&top=49.143127&bottom=49.142527" onclick="map.fitBounds([[49.142527,2.794253],[49.143127,2.794853]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Gare d'Ormoy Villers</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=49.200877&lon=2.838108&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Gare d'Ormoy Villers" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.837808&right=2.838408&top=49.201177&bottom=49.200577" onclick="map.fitBounds([[49.200577,2.837808],[49.201177,2.838408]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Gare de Crepy en Valois</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=49.231222&lon=2.888467&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Gare de Crepy en Valois" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.888167&right=2.888767&top=49.231522&bottom=49.230922" onclick="map.fitBounds([[49.230922,2.888167],[49.231522,2.888767]]);" target="hide">zoom JOSM</a></td>
+</tr>
+</table>
+</div>
+<div id="map" style="width: 640px; height: 400px; float: left;">
+</div></div>
+
+
+<script type='text/javascript'> // couche "osmfr" 
+var osmfr = L.tileLayer('http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', 
+{
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu cquest',
+    minZoom: 1,
+    maxZoom: 20
+});
+  
+// liste des couches de base
+var baseMaps = {
+    "Rendu FR": osmfr
+};
+var geojsonFeature ={
+  "type":"Feature",
+  "geometry": {
+	"type":"GeometryCollection",
+	"geometries": [
+	{"type":"LineString","coordinates":[[2.356722,48.880845],[2.495755,48.932114],[2.642406,48.975859],[2.66506,48.991391],[2.680252,49.008114],[2.699453,49.032574],[2.744686,49.096121],[2.794553,49.142827],[2.838108,49.200877],[2.888467,49.231222]]},
+	{"type":"Point","coordinates":[2.356722,48.880845]}]},
+
+  "properties": {
+	"name":"test"
+  }
+};
+
+
+map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr] } );
+json = L.geoJSON(geojsonFeature).addTo(map); 
+
+var myStyle = {
+    "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var nodes = [];
+var legs;
+var loadurl="http://localhost:8111/load_object?referrers=true&objects=";
+
+
+function get_itin() {
+var geojsonLayer = new L.GeoJSON.AJAX("http://router.project-osrm.org/match/v1/driving/2.356722,48.880845;2.495755,48.932114;2.642406,48.975859;2.66506,48.991391;2.680252,49.008114;2.699453,49.032574;2.744686,49.096121;2.794553,49.142827;2.838108,49.200877;2.888467,49.231222?timestamps=1487193120;1487193780;1487194260;1487194440;1487194620;1487194800;1487195160;1487195460;1487195760;1487196120&radiuses=20;20;20;20;20;20;20;20;20;20&overview=full&geometries=geojson&generate_hints=false&annotations=true",{
+	style:myStyle,
+	middleware:function(data){
+legs = data.matchings[0].legs;
+for(var i in legs) {
+nodes.push(legs[i].annotation.nodes);
+}
+
+for(i=0; i < nodes.length; i++){
+for(j=0; j < nodes[i].length; j++) {
+	loadurl += "n" + nodes[i][j] + ",";
+}
+}
+
+document.getElementById("load_josm").innerHTML = '<a href="'+loadurl+'" target="hide">Load JOSM</a>';
+
+		return data.matchings[0].geometry;
+	}
+});
+
+geojsonLayer.addTo(map);
+};
+
+
+
+map.fitBounds(json.getBounds());
+jj=json.getLayers()[0]._layers;
+
+idx=Object.keys(jj)[0]
+
+//debugger;
+var decorator = L.polylineDecorator(jj[idx]._latlngs, 
+{
+    patterns: [
+            {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: 
+{fillOpacity: 1, weight: 0}})}
+        ]
+}).addTo(map);
+
+// ajout de l'échelle
+L.control.scale().addTo(map);
+
+</script>
+
+
+</body>
+</html>

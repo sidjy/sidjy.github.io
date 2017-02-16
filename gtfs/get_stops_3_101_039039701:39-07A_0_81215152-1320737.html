@@ -1,0 +1,217 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<title>Interface GTFS</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+	</head>
+<body>
+<p><a href="type_of_pt.html">Home</a>
+ - <a href="get_agency_3.html">Bus</a>
+ - <a href="get_routes_3_101.html">101</a>
+ - <a href="get_trips_3_101_039039701:39-07A_0.html">039039701:39-07A 0</a>
+ 81215152-1320737
+</p>
+<p><button onclick="get_itin()">Itinéraire</button></p>
+<p id="load_josm"></p>
+<table id="osm"><tr>
+<th><a href="http://localhost:8111/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route%22%2F%3E%0A%3Ctag%20k%3D%22route%22%20v%3D%22bus%22%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Bus%2039-07%20A%20%3A%20Mairie%20%E2%86%92%20Coll%C3%A8ge%20des%203%20Moulins%22%2F%3E%0A%3Ctag%20k%3D%22from%22%20v%3D%22Mairie%22%2F%3E%0A%3Ctag%20k%3D%22to%22%20v%3D%22Coll%C3%A8ge%20des%203%20Moulins%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%2239-07%20A%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22SAVAC%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%23000000%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route dans JOSM</a> (attention aux doublons)
+</th></tr>
+<tr><td>name:Bus 39-07 A : Mairie → Collège des 3 Moulins</td></tr>
+<tr><td>from:Mairie</td></tr>
+<tr><td>to:Collège des 3 Moulins</td></tr>
+<tr><td>network:SAVAC</td></tr>
+<tr><td>ref:39-07 A</td></tr>
+<tr><td>colour:#000000</td></tr>
+</table>
+<iframe name="hide" style="display: None;"></iframe>
+<div>
+<div style="width: 640px; float: left;">
+<table id="stops" class="main">
+<tr><th>name</th><th>OSM?</th><th>ajout</th><th>?</th></tr>
+
+<tr>
+<td style="background-color:#FF0000";>Mairie</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.572693&lon=1.941877&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Mairie" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.941577&right=1.942177&top=48.572993&bottom=48.572393" onclick="map.fitBounds([[48.572393,1.941577],[48.572993,1.942177]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Cimetière</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.573724&lon=1.94638&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Cimetière" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.94608&right=1.94668&top=48.574024&bottom=48.573424" onclick="map.fitBounds([[48.573424,1.94608],[48.574024,1.94668]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>La Bâte</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.591721&lon=2.015315&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=La Bâte" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.015015&right=2.015615&top=48.592021&bottom=48.591421" onclick="map.fitBounds([[48.591421,2.015015],[48.592021,2.015615]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Bourgneuf</td>
+<td style="background-color:#FF8700";> (node similaire à 0%) - distance 146 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.004269&right=2.004869&top=48.600558&bottom=48.599958&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Bourgneuf&select=node1352809077" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.004269&right=2.004869&top=48.600558&bottom=48.599958" onclick="map.fitBounds([[48.599958,2.004269],[48.600558,2.004869]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#9DFF00";>Moutiers</td>
+<td style="background-color:#44FF00";>Les Moutiers (node similaire à 69%) - distance 28 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.972037&right=1.972637&top=48.610504&bottom=48.609904" onclick="map.fitBounds([[48.609904,1.972037],[48.610504,1.972637]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Chemin de Broderne</td>
+<td style="background-color:#03FF00";>Chemin de Broderne (node similaire à 100%) - distance 3 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.980403&right=1.981003&top=48.614278&bottom=48.613678" onclick="map.fitBounds([[48.613678,1.980403],[48.614278,1.981003]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Les Carneaux</td>
+<td style="background-color:#08FF00";>Les Carneaux (node similaire à 100%) - distance 5 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.992362&right=1.992962&top=48.622161&bottom=48.621561" onclick="map.fitBounds([[48.621561,1.992362],[48.622161,1.992962]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Place du Presbytère</td>
+<td style="background-color:#08FF00";>Place du Presbytère (node similaire à 100%) - distance 5 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.996806&right=1.997406&top=48.62265&bottom=48.62205" onclick="map.fitBounds([[48.62205,1.996806],[48.62265,1.997406]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Les Garennes</td>
+<td style="background-color:#06FF00";> (node similaire à 0%) - distance 4 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.998016&right=1.998616&top=48.628326&bottom=48.627726&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Les Garennes&select=node4189088195" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.998016&right=1.998616&top=48.628326&bottom=48.627726" onclick="map.fitBounds([[48.627726,1.998016],[48.628326,1.998616]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#C1FF00";>Longchêne Place</td>
+<td style="background-color:#42FF00";>Longchêne (node similaire à 62%) - distance 27 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.001691&right=2.002291&top=48.638872&bottom=48.638272" onclick="map.fitBounds([[48.638272,2.001691],[48.638872,2.002291]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Hpr</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.636369&lon=2.008135&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Hpr" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.007835&right=2.008435&top=48.636669&bottom=48.636069" onclick="map.fitBounds([[48.636069,2.007835],[48.636669,2.008435]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Ferme de Noncienne</td>
+<td style="background-color:#00FF00";> (node similaire à 0%) - distance 2 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.018494&right=2.019094&top=48.630297&bottom=48.629697&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Ferme de Noncienne&select=node3794409753" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.018494&right=2.019094&top=48.630297&bottom=48.629697" onclick="map.fitBounds([[48.629697,2.018494],[48.630297,2.019094]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Collège des 3 Moulins</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.614616&lon=2.025205&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Collège des 3 Moulins" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.024905&right=2.025505&top=48.614916&bottom=48.614316" onclick="map.fitBounds([[48.614316,2.024905],[48.614916,2.025505]]);" target="hide">zoom JOSM</a></td>
+</tr>
+</table>
+</div>
+<div id="map" style="width: 640px; height: 400px; float: left;">
+</div></div>
+
+
+<script type='text/javascript'> // couche "osmfr" 
+var osmfr = L.tileLayer('http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', 
+{
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu cquest',
+    minZoom: 1,
+    maxZoom: 20
+});
+  
+// liste des couches de base
+var baseMaps = {
+    "Rendu FR": osmfr
+};
+var geojsonFeature ={
+  "type":"Feature",
+  "geometry": {
+	"type":"GeometryCollection",
+	"geometries": [
+	{"type":"LineString","coordinates":[[1.941877,48.572693],[1.94638,48.573724],[2.015315,48.591721],[2.004569,48.600258],[1.972337,48.610204],[1.980703,48.613978],[1.992662,48.621861],[1.997106,48.62235],[1.998316,48.628026],[2.001991,48.638572],[2.008135,48.636369],[2.018794,48.629997],[2.025205,48.614616]]},
+	{"type":"Point","coordinates":[1.941877,48.572693]}]},
+
+  "properties": {
+	"name":"test"
+  }
+};
+
+
+map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr] } );
+json = L.geoJSON(geojsonFeature).addTo(map); 
+
+var myStyle = {
+    "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var nodes = [];
+var legs;
+var loadurl="http://localhost:8111/load_object?referrers=true&objects=";
+
+
+function get_itin() {
+var geojsonLayer = new L.GeoJSON.AJAX("http://router.project-osrm.org/match/v1/driving/1.941877,48.572693;1.94638,48.573724;2.015315,48.591721;2.004569,48.600258;1.972337,48.610204;1.980703,48.613978;1.992662,48.621861;1.997106,48.62235;1.998316,48.628026;2.001991,48.638572;2.008135,48.636369;2.018794,48.629997;2.025205,48.614616?timestamps=1487142780;1487142840;1487143380;1487143500;1487143920;1487144100;1487144160;1487144280;1487144400;1487144520;1487144640;1487144700;1487144940&radiuses=20;20;20;20;20;20;20;20;20;20;20;20;20&overview=full&geometries=geojson&generate_hints=false&annotations=true",{
+	style:myStyle,
+	middleware:function(data){
+legs = data.matchings[0].legs;
+for(var i in legs) {
+nodes.push(legs[i].annotation.nodes);
+}
+
+for(i=0; i < nodes.length; i++){
+for(j=0; j < nodes[i].length; j++) {
+	loadurl += "n" + nodes[i][j] + ",";
+}
+}
+
+document.getElementById("load_josm").innerHTML = '<a href="'+loadurl+'" target="hide">Load JOSM</a>';
+
+		return data.matchings[0].geometry;
+	}
+});
+
+geojsonLayer.addTo(map);
+};
+
+
+
+map.fitBounds(json.getBounds());
+jj=json.getLayers()[0]._layers;
+
+idx=Object.keys(jj)[0]
+
+//debugger;
+var decorator = L.polylineDecorator(jj[idx]._latlngs, 
+{
+    patterns: [
+            {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: 
+{fillOpacity: 1, weight: 0}})}
+        ]
+}).addTo(map);
+
+// ajout de l'échelle
+L.control.scale().addTo(map);
+
+</script>
+
+
+</body>
+</html>

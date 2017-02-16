@@ -1,0 +1,281 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<title>Interface GTFS</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+	</head>
+<body>
+<p><a href="type_of_pt.html">Home</a>
+ - <a href="get_agency_3.html">Bus</a>
+ - <a href="get_routes_3_14.html">14</a>
+ - <a href="get_trips_3_14_019248004:04_0.html">019248004:04 0</a>
+ 77522094-16677
+</p>
+<p><button onclick="get_itin()">Itinéraire</button></p>
+<p id="load_josm"></p>
+<table id="osm"><tr>
+<th><a href="http://localhost:8111/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route%22%2F%3E%0A%3Ctag%20k%3D%22route%22%20v%3D%22bus%22%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Bus%2004%20%3A%20Paul%20Bert%20%E2%86%92%20Cormeilles%22%2F%3E%0A%3Ctag%20k%3D%22from%22%20v%3D%22Paul%20Bert%22%2F%3E%0A%3Ctag%20k%3D%22to%22%20v%3D%22Cormeilles%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%2204%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22Bus%20en%20Seine%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%23B200FF%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route dans JOSM</a> (attention aux doublons)
+</th></tr>
+<tr><td>name:Bus 04 : Paul Bert → Cormeilles</td></tr>
+<tr><td>from:Paul Bert</td></tr>
+<tr><td>to:Cormeilles</td></tr>
+<tr><td>network:Bus en Seine</td></tr>
+<tr><td>ref:04</td></tr>
+<tr><td>colour:#B200FF</td></tr>
+</table>
+<iframe name="hide" style="display: None;"></iframe>
+<div>
+<div style="width: 640px; float: left;">
+<table id="stops" class="main">
+<tr><th>name</th><th>OSM?</th><th>ajout</th><th>?</th></tr>
+
+<tr>
+<td style="background-color:#00FF00";>Paul Bert</td>
+<td style="background-color:#92FF00";>Paul Bert (node similaire à 100%) - distance 58 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.153771&right=2.154371&top=48.890593&bottom=48.889993" onclick="map.fitBounds([[48.889993,2.153771],[48.890593,2.154371]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Rue du Port</td>
+<td style="background-color:#3AFF00";>Rue du Port (node similaire à 100%) - distance 24 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.160615&right=2.161215&top=48.890082&bottom=48.889482" onclick="map.fitBounds([[48.889482,2.160615],[48.890082,2.161215]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Gambetta</td>
+<td style="background-color:#FF6500";> (node similaire à 0%) - distance 159 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.163725&right=2.164325&top=48.897573&bottom=48.896973&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Gambetta&select=node501571106" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.163725&right=2.164325&top=48.897573&bottom=48.896973" onclick="map.fitBounds([[48.896973,2.163725],[48.897573,2.164325]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Berthelot</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.895299&lon=2.159874&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Berthelot" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.159574&right=2.160174&top=48.895599&bottom=48.894999" onclick="map.fitBounds([[48.894999,2.159574],[48.895599,2.160174]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Maurice Hardouin</td>
+<td style="background-color:#22FF00";> (node similaire à 0%) - distance 15 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.1572&right=2.1578&top=48.896251&bottom=48.895651&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Maurice Hardouin&select=node501570333" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.1572&right=2.1578&top=48.896251&bottom=48.895651" onclick="map.fitBounds([[48.895651,2.1572],[48.896251,2.1578]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Carrières Bellevue</td>
+<td style="background-color:#FF5500";> (node similaire à 0%) - distance 165 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.161686&right=2.162286&top=48.899772&bottom=48.899172&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Carrières Bellevue&select=node501570654" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.161686&right=2.162286&top=48.899772&bottom=48.899172" onclick="map.fitBounds([[48.899172,2.161686],[48.899772,2.162286]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Jean Jaurès</td>
+<td style="background-color:#37FF00";> (node similaire à 0%) - distance 23 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.162622&right=2.163222&top=48.901328&bottom=48.900728&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Jean Jaurès&select=node501570654" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.162622&right=2.163222&top=48.901328&bottom=48.900728" onclick="map.fitBounds([[48.900728,2.162622],[48.901328,2.163222]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Marolles Bouvets</td>
+<td style="background-color:#A7FF00";> (node similaire à 0%) - distance 66 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.158301&right=2.158901&top=48.901079&bottom=48.900479&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Marolles Bouvets&select=node501570512" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.158301&right=2.158901&top=48.901079&bottom=48.900479" onclick="map.fitBounds([[48.900479,2.158301],[48.901079,2.158901]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Maupassant</td>
+<td style="background-color:#28FF00";> (node similaire à 0%) - distance 17 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.155703&right=2.156303&top=48.90325&bottom=48.90265&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Maupassant&select=node501569218" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.155703&right=2.156303&top=48.90325&bottom=48.90265" onclick="map.fitBounds([[48.90265,2.155703],[48.90325,2.156303]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Maurice de Vlaminck</td>
+<td style="background-color:#4FFF00";>Maurice de Vlaminck (node similaire à 100%) - distance 32 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.151411&right=2.152011&top=48.902839&bottom=48.902239" onclick="map.fitBounds([[48.902239,2.151411],[48.902839,2.152011]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Ribot Barbier</td>
+<td style="background-color:#F2FF00";>Maurice de Vlaminck (node similaire à 0%) - distance 95 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.14979&right=2.15039&top=48.902432&bottom=48.901832&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Ribot Barbier&select=node4332194119" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.14979&right=2.15039&top=48.902432&bottom=48.901832" onclick="map.fitBounds([[48.901832,2.14979],[48.902432,2.15039]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Place du Docteur Roux</td>
+<td style="background-color:#2AFF00";>Place du Docteur Roux (node similaire à 100%) - distance 18 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.147572&right=2.148172&top=48.901161&bottom=48.900561" onclick="map.fitBounds([[48.900561,2.147572],[48.901161,2.148172]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Cormiers Ricard</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.898556&lon=2.146694&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Cormiers Ricard" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.146394&right=2.146994&top=48.898856&bottom=48.898256" onclick="map.fitBounds([[48.898256,2.146394],[48.898856,2.146994]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Landes Sabinettes</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.898913&lon=2.143586&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Landes Sabinettes" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.143286&right=2.143886&top=48.899213&bottom=48.898613" onclick="map.fitBounds([[48.898613,2.143286],[48.899213,2.143886]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Landes Stade</td>
+<td style="background-color:#0EFF00";>Landes Stade (node similaire à 100%) - distance 7 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.141766&right=2.142366&top=48.901089&bottom=48.900489" onclick="map.fitBounds([[48.900489,2.141766],[48.901089,2.142366]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Landes Vésinet</td>
+<td style="background-color:#03FF00";>Landes Vésinet (node similaire à 100%) - distance 3 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.139685&right=2.140285&top=48.903279&bottom=48.902679" onclick="map.fitBounds([[48.902679,2.139685],[48.903279,2.140285]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Jules Ferry</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.904556&lon=2.142692&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Jules Ferry" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.142392&right=2.142992&top=48.904856&bottom=48.904256" onclick="map.fitBounds([[48.904256,2.142392],[48.904856,2.142992]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Collège Pablo Picasso</td>
+<td style="background-color:#0BFF00";> (node similaire à 0%) - distance 6 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.141756&right=2.142356&top=48.910975&bottom=48.910375&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Collège Pablo Picasso&select=node319361861" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.141756&right=2.142356&top=48.910975&bottom=48.910375" onclick="map.fitBounds([[48.910375,2.141756],[48.910975,2.142356]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Sablons Darcis</td>
+<td style="background-color:#1DFF00";>Sablons Darcis (node similaire à 100%) - distance 13 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.137722&right=2.138322&top=48.910429&bottom=48.909829" onclick="map.fitBounds([[48.909829,2.137722],[48.910429,2.138322]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Curie Pages</td>
+<td style="background-color:#69FF00";> (node similaire à 0%) - distance 42 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.134328&right=2.134928&top=48.910091&bottom=48.909491&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Curie Pages&select=node766041515" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.134328&right=2.134928&top=48.910091&bottom=48.909491" onclick="map.fitBounds([[48.909491,2.134328],[48.910091,2.134928]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Terres Blanches</td>
+<td style="background-color:#06FF00";> (node similaire à 0%) - distance 4 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.132033&right=2.132633&top=48.909022&bottom=48.908422&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Terres Blanches&select=node766060217" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.132033&right=2.132633&top=48.909022&bottom=48.908422" onclick="map.fitBounds([[48.908422,2.132033],[48.909022,2.132633]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Cormeilles</td>
+<td style="background-color:#1DFF00";>Cormeilles (node similaire à 100%) - distance 13 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.129024&right=2.129624&top=48.910172&bottom=48.909572" onclick="map.fitBounds([[48.909572,2.129024],[48.910172,2.129624]]);" target="hide">zoom JOSM</a></td>
+</tr>
+</table>
+</div>
+<div id="map" style="width: 640px; height: 400px; float: left;">
+</div></div>
+
+
+<script type='text/javascript'> // couche "osmfr" 
+var osmfr = L.tileLayer('http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', 
+{
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu cquest',
+    minZoom: 1,
+    maxZoom: 20
+});
+  
+// liste des couches de base
+var baseMaps = {
+    "Rendu FR": osmfr
+};
+var geojsonFeature ={
+  "type":"Feature",
+  "geometry": {
+	"type":"GeometryCollection",
+	"geometries": [
+	{"type":"LineString","coordinates":[[2.154071,48.890293],[2.160915,48.889782],[2.164025,48.897273],[2.159874,48.895299],[2.1575,48.895951],[2.161986,48.899472],[2.162922,48.901028],[2.158601,48.900779],[2.156003,48.90295],[2.151711,48.902539],[2.15009,48.902132],[2.147872,48.900861],[2.146694,48.898556],[2.143586,48.898913],[2.142066,48.900789],[2.139985,48.902979],[2.142692,48.904556],[2.142056,48.910675],[2.138022,48.910129],[2.134628,48.909791],[2.132333,48.908722],[2.129324,48.909872]]},
+	{"type":"Point","coordinates":[2.154071,48.890293]}]},
+
+  "properties": {
+	"name":"test"
+  }
+};
+
+
+map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr] } );
+json = L.geoJSON(geojsonFeature).addTo(map); 
+
+var myStyle = {
+    "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var nodes = [];
+var legs;
+var loadurl="http://localhost:8111/load_object?referrers=true&objects=";
+
+
+function get_itin() {
+var geojsonLayer = new L.GeoJSON.AJAX("http://router.project-osrm.org/match/v1/driving/2.154071,48.890293;2.160915,48.889782;2.164025,48.897273;2.159874,48.895299;2.1575,48.895951;2.161986,48.899472;2.162922,48.901028;2.158601,48.900779;2.156003,48.90295;2.151711,48.902539;2.15009,48.902132;2.147872,48.900861;2.146694,48.898556;2.143586,48.898913;2.142066,48.900789;2.139985,48.902979;2.142692,48.904556;2.142056,48.910675;2.138022,48.910129;2.134628,48.909791;2.132333,48.908722;2.129324,48.909872?timestamps=1487176500;1487176680;1487176800;1487176860;1487176920;1487176980;1487177040;1487177100;1487177220;1487177280;1487177340;1487177400;1487177460;1487177520;1487177580;1487177640;1487177700;1487177880;1487177940;1487178000;1487178060;1487178120&radiuses=20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20&overview=full&geometries=geojson&generate_hints=false&annotations=true",{
+	style:myStyle,
+	middleware:function(data){
+legs = data.matchings[0].legs;
+for(var i in legs) {
+nodes.push(legs[i].annotation.nodes);
+}
+
+for(i=0; i < nodes.length; i++){
+for(j=0; j < nodes[i].length; j++) {
+	loadurl += "n" + nodes[i][j] + ",";
+}
+}
+
+document.getElementById("load_josm").innerHTML = '<a href="'+loadurl+'" target="hide">Load JOSM</a>';
+
+		return data.matchings[0].geometry;
+	}
+});
+
+geojsonLayer.addTo(map);
+};
+
+
+
+map.fitBounds(json.getBounds());
+jj=json.getLayers()[0]._layers;
+
+idx=Object.keys(jj)[0]
+
+//debugger;
+var decorator = L.polylineDecorator(jj[idx]._latlngs, 
+{
+    patterns: [
+            {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: 
+{fillOpacity: 1, weight: 0}})}
+        ]
+}).addTo(map);
+
+// ajout de l'échelle
+L.control.scale().addTo(map);
+
+</script>
+
+
+</body>
+</html>

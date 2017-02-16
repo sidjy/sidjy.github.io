@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<title>Interface GTFS</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+	</head>
+<body>
+<p><a href="type_of_pt.html">Home</a>
+ - <a href="get_agency_3.html">Bus</a>
+ - <a href="get_routes_3_584.html">584</a>
+ - <a href="get_trips_3_584_350350021:J_0.html">350350021:J 0</a>
+ 80666588-1214576
+</p>
+<p><button onclick="get_itin()">Itinéraire</button></p>
+<p id="load_josm"></p>
+<table id="osm"><tr>
+<th><a href="http://localhost:8111/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route%22%2F%3E%0A%3Ctag%20k%3D%22route%22%20v%3D%22bus%22%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Bus%20J%20%3A%20Mantes-la-Ville%20-%20Gare%20Routi%C3%A8re%20%E2%86%92%20Buchelay%20-%20Ren%C3%A9%20Renault%22%2F%3E%0A%3Ctag%20k%3D%22from%22%20v%3D%22Mantes-la-Ville%20-%20Gare%20Routi%C3%A8re%22%2F%3E%0A%3Ctag%20k%3D%22to%22%20v%3D%22Buchelay%20-%20Ren%C3%A9%20Renault%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%22J%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22TAM%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%238080FF%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route dans JOSM</a> (attention aux doublons)
+</th></tr>
+<tr><td>name:Bus J : Mantes-la-Ville - Gare Routière → Buchelay - René Renault</td></tr>
+<tr><td>from:Mantes-la-Ville - Gare Routière</td></tr>
+<tr><td>to:Buchelay - René Renault</td></tr>
+<tr><td>network:TAM</td></tr>
+<tr><td>ref:J</td></tr>
+<tr><td>colour:#8080FF</td></tr>
+</table>
+<iframe name="hide" style="display: None;"></iframe>
+<div>
+<div style="width: 640px; float: left;">
+<table id="stops" class="main">
+<tr><th>name</th><th>OSM?</th><th>ajout</th><th>?</th></tr>
+
+<tr>
+<td style="background-color:#FF0000";>Mantes-la-Ville - Gare Routière</td>
+<td style="background-color:#18FF00";> (node similaire à 0%) - distance 11 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.704122&right=1.704722&top=48.988389&bottom=48.987789&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Mantes-la-Ville - Gare Routière&select=node1480156298" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.704122&right=1.704722&top=48.988389&bottom=48.987789" onclick="map.fitBounds([[48.987789,1.704122],[48.988389,1.704722]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Mantes-la-Ville - Sacré Coeur</td>
+<td style="background-color:#FF2900";> (node similaire à 0%) - distance 182 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.707424&right=1.708024&top=48.984057&bottom=48.983457&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Mantes-la-Ville - Sacré Coeur&select=node1468619216" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.707424&right=1.708024&top=48.984057&bottom=48.983457" onclick="map.fitBounds([[48.983457,1.707424],[48.984057,1.708024]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF9600";>Mantes-la-Ville - Bates</td>
+<td style="background-color:#15FF00";>Bates (node similaire à 30%) - distance 10 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.70442&right=1.70502&top=48.980698&bottom=48.980098" onclick="map.fitBounds([[48.980098,1.70442],[48.980698,1.70502]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Mantes-la-Ville - Plaisances</td>
+<td style="background-color:#FFCD00";> (node similaire à 0%) - distance 119 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.702915&right=1.703515&top=48.976547&bottom=48.975947&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Mantes-la-Ville - Plaisances&select=node1696462842" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.702915&right=1.703515&top=48.976547&bottom=48.975947" onclick="map.fitBounds([[48.975947,1.702915],[48.976547,1.703515]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Mantes-la-Ville - Belles Lances</td>
+<td style="background-color:#2AFF00";> (node similaire à 0%) - distance 18 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.699436&right=1.700036&top=48.976376&bottom=48.975776&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Mantes-la-Ville - Belles Lances&select=node1696462874" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.699436&right=1.700036&top=48.976376&bottom=48.975776" onclick="map.fitBounds([[48.975776,1.699436],[48.976376,1.700036]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Mantes-la-Ville - Chemin de Dreux</td>
+<td style="background-color:#CBFF00";> (node similaire à 0%) - distance 80 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.699347&right=1.699947&top=48.979143&bottom=48.978543&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Mantes-la-Ville - Chemin de Dreux&select=node1696462990" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.699347&right=1.699947&top=48.979143&bottom=48.978543" onclick="map.fitBounds([[48.978543,1.699347],[48.979143,1.699947]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Mantes-la-Ville - Pincevins</td>
+<td style="background-color:#0EFF00";>But (node similaire à 0%) - distance 7 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.694827&right=1.695427&top=48.9792&bottom=48.9786&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Mantes-la-Ville - Pincevins&select=node1468619199" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.694827&right=1.695427&top=48.9792&bottom=48.9786" onclick="map.fitBounds([[48.9786,1.694827],[48.9792,1.695427]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFC000";>Magnanville - Mongazons</td>
+<td style="background-color:#25FF00";>Mongazons (CAMY) (node similaire à 38%) - distance 16 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.692474&right=1.693074&top=48.97517&bottom=48.97457" onclick="map.fitBounds([[48.97457,1.692474],[48.97517,1.693074]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Magnanville - Merles</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.971942&lon=1.697971&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Magnanville - Merles" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.697671&right=1.698271&top=48.972242&bottom=48.971642" onclick="map.fitBounds([[48.971642,1.697671],[48.972242,1.698271]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFCA00";>Magnanville - Penthièvres</td>
+<td style="background-color:#25FF00";>Penthièvre (node similaire à 40%) - distance 16 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.695738&right=1.696338&top=48.970667&bottom=48.970067" onclick="map.fitBounds([[48.970067,1.695738],[48.970667,1.696338]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFDA00";>Magnanville - Lorraine</td>
+<td style="background-color:#06FF00";>Lorraine (node similaire à 43%) - distance 4 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.693454&right=1.694054&top=48.969981&bottom=48.969381" onclick="map.fitBounds([[48.969381,1.693454],[48.969981,1.694054]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFE400";>Magnanville - Thymerais</td>
+<td style="background-color:#15FF00";>Thymerais (node similaire à 45%) - distance 10 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.693268&right=1.693868&top=48.96847&bottom=48.96787" onclick="map.fitBounds([[48.96787,1.693268],[48.96847,1.693868]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFDA00";>Magnanville - Touraine</td>
+<td style="background-color:#13FF00";>Touraine (node similaire à 43%) - distance 9 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.693665&right=1.694265&top=48.967214&bottom=48.966614" onclick="map.fitBounds([[48.966614,1.693665],[48.967214,1.694265]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Magnanville - Anjou</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.966082&lon=1.691314&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Magnanville - Anjou" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.691014&right=1.691614&top=48.966382&bottom=48.965782" onclick="map.fitBounds([[48.965782,1.691014],[48.966382,1.691614]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFF400";>Magnanville - Roussières</td>
+<td style="background-color:#03FF00";>Roussières (node similaire à 48%) - distance 3 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.688748&right=1.689348&top=48.966388&bottom=48.965788" onclick="map.fitBounds([[48.965788,1.688748],[48.966388,1.689348]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Magnanville - Mare Pasloue</td>
+<td style="background-color:#0BFF00";> (node similaire à 0%) - distance 6 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.683512&right=1.684112&top=48.967078&bottom=48.966478&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Magnanville - Mare Pasloue&select=node1468619178" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.683512&right=1.684112&top=48.967078&bottom=48.966478" onclick="map.fitBounds([[48.966478,1.683512],[48.967078,1.684112]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Magnanville - Cytises</td>
+<td style="background-color:#10FF00";> (node similaire à 0%) - distance 8 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.68221&right=1.68281&top=48.971798&bottom=48.971198&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Magnanville - Cytises&select=node1468619184" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.68221&right=1.68281&top=48.971798&bottom=48.971198" onclick="map.fitBounds([[48.971198,1.68221],[48.971798,1.68281]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Magnanville - Ormes</td>
+<td style="background-color:#2AFF00";> (node similaire à 0%) - distance 18 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.682279&right=1.682879&top=48.974971&bottom=48.974371&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Magnanville - Ormes&select=node1468619185" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.682279&right=1.682879&top=48.974971&bottom=48.974371" onclick="map.fitBounds([[48.974371,1.682279],[48.974971,1.682879]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Magnanville - Tilleuls</td>
+<td style="background-color:#15FF00";> (node similaire à 0%) - distance 10 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.685225&right=1.685825&top=48.977333&bottom=48.976733&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Magnanville - Tilleuls&select=node1468619188" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.685225&right=1.685825&top=48.977333&bottom=48.976733" onclick="map.fitBounds([[48.976733,1.685225],[48.977333,1.685825]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Magnanville - Fontenay</td>
+<td style="background-color:#70FF00";> (node similaire à 0%) - distance 45 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.685686&right=1.686286&top=48.978665&bottom=48.978065&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Magnanville - Fontenay&select=node1468619193" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.685686&right=1.686286&top=48.978665&bottom=48.978065" onclick="map.fitBounds([[48.978065,1.685686],[48.978665,1.686286]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Buchelay - Chemin de Fontenay</td>
+<td style="background-color:#00FF00";> (node similaire à 0%) - distance 2 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.679562&right=1.680162&top=48.979324&bottom=48.978724&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Buchelay - Chemin de Fontenay&select=node1468619200" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.679562&right=1.680162&top=48.979324&bottom=48.978724" onclick="map.fitBounds([[48.978724,1.679562],[48.979324,1.680162]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Buchelay - Aureines</td>
+<td style="background-color:#06FF00";> (node similaire à 0%) - distance 4 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.676388&right=1.676988&top=48.979809&bottom=48.979209&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Buchelay - Aureines&select=node1468619204" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.676388&right=1.676988&top=48.979809&bottom=48.979209" onclick="map.fitBounds([[48.979209,1.676388],[48.979809,1.676988]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Mairie</td>
+<td style="background-color:#25FF00";> (node similaire à 0%) - distance 16 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.672243&right=1.672843&top=48.98046&bottom=48.97986&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Mairie&select=node1468619206" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.672243&right=1.672843&top=48.98046&bottom=48.97986" onclick="map.fitBounds([[48.97986,1.672243],[48.98046,1.672843]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#F0FF00";>Buchelay - René Renault</td>
+<td style="background-color:#FFFC00";>René Renault (node similaire à 53%) - distance 101 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=1.664965&right=1.665565&top=48.981534&bottom=48.980934" onclick="map.fitBounds([[48.980934,1.664965],[48.981534,1.665565]]);" target="hide">zoom JOSM</a></td>
+</tr>
+</table>
+</div>
+<div id="map" style="width: 640px; height: 400px; float: left;">
+</div></div>
+
+
+<script type='text/javascript'> // couche "osmfr" 
+var osmfr = L.tileLayer('http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', 
+{
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu cquest',
+    minZoom: 1,
+    maxZoom: 20
+});
+  
+// liste des couches de base
+var baseMaps = {
+    "Rendu FR": osmfr
+};
+var geojsonFeature ={
+  "type":"Feature",
+  "geometry": {
+	"type":"GeometryCollection",
+	"geometries": [
+	{"type":"LineString","coordinates":[[1.704422,48.988089],[1.707724,48.983757],[1.70472,48.980398],[1.703215,48.976247],[1.699736,48.976076],[1.699647,48.978843],[1.695127,48.9789],[1.692774,48.97487],[1.697971,48.971942],[1.696038,48.970367],[1.693754,48.969681],[1.693568,48.96817],[1.693965,48.966914],[1.691314,48.966082],[1.689048,48.966088],[1.683812,48.966778],[1.68251,48.971498],[1.682579,48.974671],[1.685525,48.977033],[1.685986,48.978365],[1.679862,48.979024],[1.676688,48.979509],[1.672543,48.98016],[1.665265,48.981234]]},
+	{"type":"Point","coordinates":[1.704422,48.988089]}]},
+
+  "properties": {
+	"name":"test"
+  }
+};
+
+
+map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr] } );
+json = L.geoJSON(geojsonFeature).addTo(map); 
+
+var myStyle = {
+    "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var nodes = [];
+var legs;
+var loadurl="http://localhost:8111/load_object?referrers=true&objects=";
+
+
+function get_itin() {
+var geojsonLayer = new L.GeoJSON.AJAX("http://router.project-osrm.org/match/v1/driving/1.704422,48.988089;1.707724,48.983757;1.70472,48.980398;1.703215,48.976247;1.699736,48.976076;1.699647,48.978843;1.695127,48.9789;1.692774,48.97487;1.697971,48.971942;1.696038,48.970367;1.693754,48.969681;1.693568,48.96817;1.693965,48.966914;1.691314,48.966082;1.689048,48.966088;1.683812,48.966778;1.68251,48.971498;1.682579,48.974671;1.685525,48.977033;1.685986,48.978365;1.679862,48.979024;1.676688,48.979509;1.672543,48.98016;1.665265,48.981234?timestamps=1487282700;1487282820;1487282880;1487282940;1487283000;1487283000;1487283060;1487283120;1487283180;1487283180;1487283240;1487283240;1487283240;1487283300;1487283300;1487283360;1487283420;1487283540;1487283600;1487283660;1487283720;1487283780;1487283840;1487283900&radiuses=20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20&overview=full&geometries=geojson&generate_hints=false&annotations=true",{
+	style:myStyle,
+	middleware:function(data){
+legs = data.matchings[0].legs;
+for(var i in legs) {
+nodes.push(legs[i].annotation.nodes);
+}
+
+for(i=0; i < nodes.length; i++){
+for(j=0; j < nodes[i].length; j++) {
+	loadurl += "n" + nodes[i][j] + ",";
+}
+}
+
+document.getElementById("load_josm").innerHTML = '<a href="'+loadurl+'" target="hide">Load JOSM</a>';
+
+		return data.matchings[0].geometry;
+	}
+});
+
+geojsonLayer.addTo(map);
+};
+
+
+
+map.fitBounds(json.getBounds());
+jj=json.getLayers()[0]._layers;
+
+idx=Object.keys(jj)[0]
+
+//debugger;
+var decorator = L.polylineDecorator(jj[idx]._latlngs, 
+{
+    patterns: [
+            {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: 
+{fillOpacity: 1, weight: 0}})}
+        ]
+}).addTo(map);
+
+// ajout de l'échelle
+L.control.scale().addTo(map);
+
+</script>
+
+
+</body>
+</html>

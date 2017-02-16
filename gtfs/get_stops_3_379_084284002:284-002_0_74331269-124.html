@@ -8,6 +8,7 @@
 		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
 		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
 	</head>
 <body>
 <p><a href="type_of_pt.html">Home</a>
@@ -16,6 +17,8 @@
  - <a href="get_trips_3_379_084284002:284-002_0.html">084284002:284-002 0</a>
  74331269-124
 </p>
+<p><button onclick="get_itin()">Itinéraire</button></p>
+<p id="load_josm"></p>
 <table id="osm"><tr>
 <th><a href="http://localhost:8111/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route%22%2F%3E%0A%3Ctag%20k%3D%22route%22%20v%3D%22bus%22%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Bus%20284-002%20%3A%20Route%20de%20Maisse%20%E2%86%92%20Lep%20Mandela%22%2F%3E%0A%3Ctag%20k%3D%22from%22%20v%3D%22Route%20de%20Maisse%22%2F%3E%0A%3Ctag%20k%3D%22to%22%20v%3D%22Lep%20Mandela%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%22284-002%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22LES%20CARS%20BLEUS%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%23000000%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route dans JOSM</a> (attention aux doublons)
 </th></tr>
@@ -123,7 +126,7 @@
 <td><a href="http://localhost:8111/load_and_zoom?left=2.154677&right=2.155277&top=48.43861&bottom=48.43801" onclick="map.fitBounds([[48.43801,2.154677],[48.43861,2.155277]]);" target="hide">zoom JOSM</a></td>
 </tr>
 <tr>
-<td style="background-color:#FFF400";>Lycée st Hilaire</td>
+<td style="background-color:#FFF400";>Lycée St Hilaire</td>
 <td style="background-color:#FDFF00";>Lycée Geoffroy Saint-Hilaire (node similaire à 48%) - distance 99 m
 </td>
 <td></td>
@@ -137,7 +140,8 @@
 <td><a href="http://localhost:8111/load_and_zoom?left=2.148551&right=2.149151&top=48.440021&bottom=48.439421" onclick="map.fitBounds([[48.439421,2.148551],[48.440021,2.149151]]);" target="hide">zoom JOSM</a></td>
 </tr>
 </table>
-</div><div id="map" style="width: 640px; height: 400px; float: left;">
+</div>
+<div id="map" style="width: 640px; height: 400px; float: left;">
 </div></div>
 
 
@@ -169,6 +173,44 @@ var geojsonFeature ={
 
 map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr] } );
 json = L.geoJSON(geojsonFeature).addTo(map); 
+
+var myStyle = {
+    "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var nodes = [];
+var legs;
+var loadurl="http://localhost:8111/load_object?referrers=true&objects=";
+
+
+function get_itin() {
+var geojsonLayer = new L.GeoJSON.AJAX("http://router.project-osrm.org/match/v1/driving/2.380449,48.370789;2.387532,48.370013;2.388691,48.367908;2.388022,48.360473;2.384807,48.370463;2.377807,48.357205;2.379321,48.344491;2.378591,48.34299;2.372395,48.335224;2.325615,48.34618;2.324105,48.343186;2.27168,48.356268;2.159751,48.436807;2.154977,48.43831;2.148529,48.435252;2.148851,48.439721?timestamps=1487148000;1487148120;1487148180;1487148240;1487148300;1487148360;1487148480;1487148540;1487148600;1487149200;1487149320;1487149560;1487150400;1487150460;1487150580;1487150700&radiuses=20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20&overview=full&geometries=geojson&generate_hints=false&annotations=true",{
+	style:myStyle,
+	middleware:function(data){
+legs = data.matchings[0].legs;
+for(var i in legs) {
+nodes.push(legs[i].annotation.nodes);
+}
+
+for(i=0; i < nodes.length; i++){
+for(j=0; j < nodes[i].length; j++) {
+	loadurl += "n" + nodes[i][j] + ",";
+}
+}
+
+document.getElementById("load_josm").innerHTML = '<a href="'+loadurl+'" target="hide">Load JOSM</a>';
+
+		return data.matchings[0].geometry;
+	}
+});
+
+geojsonLayer.addTo(map);
+};
+
+
+
 map.fitBounds(json.getBounds());
 jj=json.getLayers()[0]._layers;
 

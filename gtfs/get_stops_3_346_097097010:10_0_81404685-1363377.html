@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<title>Interface GTFS</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+	</head>
+<body>
+<p><a href="type_of_pt.html">Home</a>
+ - <a href="get_agency_3.html">Bus</a>
+ - <a href="get_routes_3_346.html">346</a>
+ - <a href="get_trips_3_346_097097010:10_0.html">097097010:10 0</a>
+ 81404685-1363377
+</p>
+<p><button onclick="get_itin()">Itinéraire</button></p>
+<p id="load_josm"></p>
+<table id="osm"><tr>
+<th><a href="http://localhost:8111/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route%22%2F%3E%0A%3Ctag%20k%3D%22route%22%20v%3D%22bus%22%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Bus%2010%20%3A%20Mairie%20%E2%86%92%20Gambetta%22%2F%3E%0A%3Ctag%20k%3D%22from%22%20v%3D%22Mairie%22%2F%3E%0A%3Ctag%20k%3D%22to%22%20v%3D%22Gambetta%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%2210%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22TRAMY%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%23CCCC00%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route dans JOSM</a> (attention aux doublons)
+</th></tr>
+<tr><td>name:Bus 10 : Mairie → Gambetta</td></tr>
+<tr><td>from:Mairie</td></tr>
+<tr><td>to:Gambetta</td></tr>
+<tr><td>network:TRAMY</td></tr>
+<tr><td>ref:10</td></tr>
+<tr><td>colour:#CCCC00</td></tr>
+</table>
+<iframe name="hide" style="display: None;"></iframe>
+<div>
+<div style="width: 640px; float: left;">
+<table id="stops" class="main">
+<tr><th>name</th><th>OSM?</th><th>ajout</th><th>?</th></tr>
+
+<tr>
+<td style="background-color:#FF0000";>Mairie</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.704422&lon=3.198051&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Mairie" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=3.197751&right=3.198351&top=48.704722&bottom=48.704122" onclick="map.fitBounds([[48.704122,3.197751],[48.704722,3.198351]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>La Malgagne</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.709984&lon=3.163046&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=La Malgagne" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=3.162746&right=3.163346&top=48.710284&bottom=48.709684" onclick="map.fitBounds([[48.709684,3.162746],[48.710284,3.163346]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>La Croix Camus</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.71482&lon=3.156507&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=La Croix Camus" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=3.156207&right=3.156807&top=48.71512&bottom=48.71452" onclick="map.fitBounds([[48.71452,3.156207],[48.71512,3.156807]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Mairie</td>
+<td style="background-color:#18FF00";>Mairie (node similaire à 100%) - distance 11 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=3.170555&right=3.171155&top=48.717888&bottom=48.717288" onclick="map.fitBounds([[48.717288,3.170555],[48.717888,3.171155]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Fontaine Ramée</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.726583&lon=3.164858&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Fontaine Ramée" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=3.164558&right=3.165158&top=48.726883&bottom=48.726283" onclick="map.fitBounds([[48.726283,3.164558],[48.726883,3.165158]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Planche</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.731873&lon=3.155146&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Planche" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=3.154846&right=3.155446&top=48.732173&bottom=48.731573" onclick="map.fitBounds([[48.731573,3.154846],[48.732173,3.155446]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Montbauchet</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.739942&lon=3.138434&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Montbauchet" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=3.138134&right=3.138734&top=48.740242&bottom=48.739642" onclick="map.fitBounds([[48.739642,3.138134],[48.740242,3.138734]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Courte Soupe</td>
+<td style="background-color:#18FF00";> (node similaire à 0%) - distance 11 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=3.16473&right=3.16533&top=48.776877&bottom=48.776277&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Courte Soupe&select=node1646861943" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=3.16473&right=3.16533&top=48.776877&bottom=48.776277" onclick="map.fitBounds([[48.776277,3.16473],[48.776877,3.16533]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Collège Hippolyte Rémy</td>
+<td style="background-color:#FFB300";> (node similaire à 0%) - distance 129 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=3.08978&right=3.09038&top=48.809627&bottom=48.809027&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Collège Hippolyte Rémy&select=node1648778839" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=3.08978&right=3.09038&top=48.809627&bottom=48.809027" onclick="map.fitBounds([[48.809027,3.08978],[48.809627,3.09038]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#E0FF00";>Cité Scolaire</td>
+<td style="background-color:#5CFF00";>Coulommiers - Cité Scolaire (node similaire à 56%) - distance 37 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=3.09132&right=3.09192&top=48.823809&bottom=48.823209" onclick="map.fitBounds([[48.823209,3.09132],[48.823809,3.09192]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Gambetta</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.813797&lon=3.086715&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Gambetta" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=3.086415&right=3.087015&top=48.814097&bottom=48.813497" onclick="map.fitBounds([[48.813497,3.086415],[48.814097,3.087015]]);" target="hide">zoom JOSM</a></td>
+</tr>
+</table>
+</div>
+<div id="map" style="width: 640px; height: 400px; float: left;">
+</div></div>
+
+
+<script type='text/javascript'> // couche "osmfr" 
+var osmfr = L.tileLayer('http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', 
+{
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu cquest',
+    minZoom: 1,
+    maxZoom: 20
+});
+  
+// liste des couches de base
+var baseMaps = {
+    "Rendu FR": osmfr
+};
+var geojsonFeature ={
+  "type":"Feature",
+  "geometry": {
+	"type":"GeometryCollection",
+	"geometries": [
+	{"type":"LineString","coordinates":[[3.198051,48.704422],[3.163046,48.709984],[3.156507,48.71482],[3.170855,48.717588],[3.164858,48.726583],[3.155146,48.731873],[3.138434,48.739942],[3.16503,48.776577],[3.09008,48.809327],[3.09162,48.823509],[3.086715,48.813797]]},
+	{"type":"Point","coordinates":[3.198051,48.704422]}]},
+
+  "properties": {
+	"name":"test"
+  }
+};
+
+
+map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr] } );
+json = L.geoJSON(geojsonFeature).addTo(map); 
+
+var myStyle = {
+    "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var nodes = [];
+var legs;
+var loadurl="http://localhost:8111/load_object?referrers=true&objects=";
+
+
+function get_itin() {
+var geojsonLayer = new L.GeoJSON.AJAX("http://router.project-osrm.org/match/v1/driving/3.198051,48.704422;3.163046,48.709984;3.156507,48.71482;3.170855,48.717588;3.164858,48.726583;3.155146,48.731873;3.138434,48.739942;3.16503,48.776577;3.09008,48.809327;3.09162,48.823509;3.086715,48.813797?timestamps=1487141820;1487142180;1487142240;1487142420;1487142540;1487142660;1487142780;1487143200;1487144100;1487144700;1487145000&radiuses=20;20;20;20;20;20;20;20;20;20;20&overview=full&geometries=geojson&generate_hints=false&annotations=true",{
+	style:myStyle,
+	middleware:function(data){
+legs = data.matchings[0].legs;
+for(var i in legs) {
+nodes.push(legs[i].annotation.nodes);
+}
+
+for(i=0; i < nodes.length; i++){
+for(j=0; j < nodes[i].length; j++) {
+	loadurl += "n" + nodes[i][j] + ",";
+}
+}
+
+document.getElementById("load_josm").innerHTML = '<a href="'+loadurl+'" target="hide">Load JOSM</a>';
+
+		return data.matchings[0].geometry;
+	}
+});
+
+geojsonLayer.addTo(map);
+};
+
+
+
+map.fitBounds(json.getBounds());
+jj=json.getLayers()[0]._layers;
+
+idx=Object.keys(jj)[0]
+
+//debugger;
+var decorator = L.polylineDecorator(jj[idx]._latlngs, 
+{
+    patterns: [
+            {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: 
+{fillOpacity: 1, weight: 0}})}
+        ]
+}).addTo(map);
+
+// ajout de l'échelle
+L.control.scale().addTo(map);
+
+</script>
+
+
+</body>
+</html>

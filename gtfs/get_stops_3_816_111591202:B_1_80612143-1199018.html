@@ -1,0 +1,224 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<title>Interface GTFS</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+	</head>
+<body>
+<p><a href="type_of_pt.html">Home</a>
+ - <a href="get_agency_3.html">Bus</a>
+ - <a href="get_routes_3_816.html">816</a>
+ - <a href="get_trips_3_816_111591202:B_1.html">111591202:B 1</a>
+ 80612143-1199018
+</p>
+<p><button onclick="get_itin()">Itinéraire</button></p>
+<p id="load_josm"></p>
+<table id="osm"><tr>
+<th><a href="http://localhost:8111/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route%22%2F%3E%0A%3Ctag%20k%3D%22route%22%20v%3D%22bus%22%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Bus%20B%20%3A%20Ballainvilliers%20Centre%20%E2%86%92%20Ballainvilliers%20Centre%22%2F%3E%0A%3Ctag%20k%3D%22from%22%20v%3D%22Ballainvilliers%20Centre%22%2F%3E%0A%3Ctag%20k%3D%22to%22%20v%3D%22Ballainvilliers%20Centre%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%22B%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22Paris%20Saclay%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%23E50051%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route dans JOSM</a> (attention aux doublons)
+</th></tr>
+<tr><td>name:Bus B : Ballainvilliers Centre → Ballainvilliers Centre</td></tr>
+<tr><td>from:Ballainvilliers Centre</td></tr>
+<tr><td>to:Ballainvilliers Centre</td></tr>
+<tr><td>network:Paris Saclay</td></tr>
+<tr><td>ref:B</td></tr>
+<tr><td>colour:#E50051</td></tr>
+</table>
+<iframe name="hide" style="display: None;"></iframe>
+<div>
+<div style="width: 640px; float: left;">
+<table id="stops" class="main">
+<tr><th>name</th><th>OSM?</th><th>ajout</th><th>?</th></tr>
+
+<tr>
+<td style="background-color:#00FF00";>Ballainvilliers Centre</td>
+<td style="background-color:#0EFF00";>Ballainvilliers Centre (node similaire à 100%) - distance 7 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.292697&right=2.293297&top=48.676263&bottom=48.675663" onclick="map.fitBounds([[48.675663,2.292697],[48.676263,2.293297]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Stade</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.676719&lon=2.297597&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Stade" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.297297&right=2.297897&top=48.677019&bottom=48.676419" onclick="map.fitBounds([[48.676419,2.297297],[48.677019,2.297897]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Templiers</td>
+<td style="background-color:#20FF00";>Templiers (node similaire à 100%) - distance 14 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.30605&right=2.30665&top=48.681085&bottom=48.680485" onclick="map.fitBounds([[48.680485,2.30605],[48.681085,2.30665]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Gare RER de Gravigny-Balizy Vers Morangi</td>
+<td style="background-color:#25FF00";> (node similaire à 0%) - distance 16 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.317043&right=2.317643&top=48.685258&bottom=48.684658&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Gare RER de Gravigny-Balizy Vers Morangi&select=node4546331524" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.317043&right=2.317643&top=48.685258&bottom=48.684658" onclick="map.fitBounds([[48.684658,2.317043],[48.685258,2.317643]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Rue de Savigny</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.687772&lon=2.321116&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Rue de Savigny" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.320816&right=2.321416&top=48.688072&bottom=48.687472" onclick="map.fitBounds([[48.687472,2.320816],[48.688072,2.321416]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Rue Lavoisier</td>
+<td style="background-color:#20FF00";>Rue Lavoisier (node similaire à 100%) - distance 14 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.328459&right=2.329059&top=48.692189&bottom=48.691589" onclick="map.fitBounds([[48.691589,2.328459],[48.692189,2.329059]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Pasteur</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.69535&lon=2.327822&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Pasteur" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.327522&right=2.328122&top=48.69565&bottom=48.69505" onclick="map.fitBounds([[48.69505,2.327522],[48.69565,2.328122]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Morin</td>
+<td style="background-color:#03FF00";>Morin (node similaire à 100%) - distance 3 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.317638&right=2.318238&top=48.693249&bottom=48.692649" onclick="map.fitBounds([[48.692649,2.317638],[48.693249,2.318238]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Pont des Maures</td>
+<td style="background-color:#4FFF00";>Pont des Maures (node similaire à 100%) - distance 32 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.316118&right=2.316718&top=48.691792&bottom=48.691192" onclick="map.fitBounds([[48.691192,2.316118],[48.691792,2.316718]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Georges Brassens</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.689057&lon=2.318727&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Georges Brassens" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.318427&right=2.319027&top=48.689357&bottom=48.688757" onclick="map.fitBounds([[48.688757,2.318427],[48.689357,2.319027]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Gare RER de Gravigny-Balizy Vers Ballain</td>
+<td style="background-color:#3CFF00";> (node similaire à 0%) - distance 25 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.31722&right=2.31782&top=48.685384&bottom=48.684784&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Gare RER de Gravigny-Balizy Vers Ballain&select=node4546331524" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.31722&right=2.31782&top=48.685384&bottom=48.684784" onclick="map.fitBounds([[48.684784,2.31722],[48.685384,2.31782]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Balizy</td>
+<td style="background-color:#6EFF00";>Balizy (node similaire à 100%) - distance 44 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.310487&right=2.311087&top=48.683162&bottom=48.682562" onclick="map.fitBounds([[48.682562,2.310487],[48.683162,2.311087]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Basch - Poulettes</td>
+<td style="background-color:#FF0000";>no</td>
+<td><a href="http://localhost:8111/add_node?lat=48.684866&lon=2.305967&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Basch - Poulettes" target="hide">ajouter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.305667&right=2.306267&top=48.685166&bottom=48.684566" onclick="map.fitBounds([[48.684566,2.305667],[48.685166,2.306267]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Ballainvilliers Centre</td>
+<td style="background-color:#0EFF00";>Ballainvilliers Centre (node similaire à 100%) - distance 7 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.292697&right=2.293297&top=48.676263&bottom=48.675663" onclick="map.fitBounds([[48.675663,2.292697],[48.676263,2.293297]]);" target="hide">zoom JOSM</a></td>
+</tr>
+</table>
+</div>
+<div id="map" style="width: 640px; height: 400px; float: left;">
+</div></div>
+
+
+<script type='text/javascript'> // couche "osmfr" 
+var osmfr = L.tileLayer('http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', 
+{
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu cquest',
+    minZoom: 1,
+    maxZoom: 20
+});
+  
+// liste des couches de base
+var baseMaps = {
+    "Rendu FR": osmfr
+};
+var geojsonFeature ={
+  "type":"Feature",
+  "geometry": {
+	"type":"GeometryCollection",
+	"geometries": [
+	{"type":"LineString","coordinates":[[2.292997,48.675963],[2.297597,48.676719],[2.30635,48.680785],[2.317343,48.684958],[2.321116,48.687772],[2.328759,48.691889],[2.327822,48.69535],[2.317938,48.692949],[2.316418,48.691492],[2.318727,48.689057],[2.31752,48.685084],[2.310787,48.682862],[2.305967,48.684866],[2.292997,48.675963]]},
+	{"type":"Point","coordinates":[2.292997,48.675963]}]},
+
+  "properties": {
+	"name":"test"
+  }
+};
+
+
+map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr] } );
+json = L.geoJSON(geojsonFeature).addTo(map); 
+
+var myStyle = {
+    "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var nodes = [];
+var legs;
+var loadurl="http://localhost:8111/load_object?referrers=true&objects=";
+
+
+function get_itin() {
+var geojsonLayer = new L.GeoJSON.AJAX("http://router.project-osrm.org/match/v1/driving/2.292997,48.675963;2.297597,48.676719;2.30635,48.680785;2.317343,48.684958;2.321116,48.687772;2.328759,48.691889;2.327822,48.69535;2.317938,48.692949;2.316418,48.691492;2.318727,48.689057;2.31752,48.685084;2.310787,48.682862;2.305967,48.684866;2.292997,48.675963?timestamps=1487226060;1487224500;1487224620;1487224800;1487224920;1487225040;1487225220;1487225340;1487225400;1487225520;1487225640;1487225760;1487225880;1487226060&radiuses=20;20;20;20;20;20;20;20;20;20;20;20;20;20&overview=full&geometries=geojson&generate_hints=false&annotations=true",{
+	style:myStyle,
+	middleware:function(data){
+legs = data.matchings[0].legs;
+for(var i in legs) {
+nodes.push(legs[i].annotation.nodes);
+}
+
+for(i=0; i < nodes.length; i++){
+for(j=0; j < nodes[i].length; j++) {
+	loadurl += "n" + nodes[i][j] + ",";
+}
+}
+
+document.getElementById("load_josm").innerHTML = '<a href="'+loadurl+'" target="hide">Load JOSM</a>';
+
+		return data.matchings[0].geometry;
+	}
+});
+
+geojsonLayer.addTo(map);
+};
+
+
+
+map.fitBounds(json.getBounds());
+jj=json.getLayers()[0]._layers;
+
+idx=Object.keys(jj)[0]
+
+//debugger;
+var decorator = L.polylineDecorator(jj[idx]._latlngs, 
+{
+    patterns: [
+            {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: 
+{fillOpacity: 1, weight: 0}})}
+        ]
+}).addTo(map);
+
+// ajout de l'échelle
+L.control.scale().addTo(map);
+
+</script>
+
+
+</body>
+</html>
