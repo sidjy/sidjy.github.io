@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<title>Interface GTFS</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+	</head>
+<body>
+<p><a href="type_of_pt.html">Home</a>
+ - <a href="get_agency_3.html">Bus</a>
+ - <a href="get_routes_3_442.html">442</a>
+ - <a href="get_trips_3_442_100100126:126_1.html">100100126:126 1</a>
+ 79294946-148095
+</p>
+<p><button onclick="get_itin()">Itinéraire</button></p>
+<p id="load_josm"></p>
+<table id="osm"><tr>
+<th><a href="http://localhost:8111/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route%22%2F%3E%0A%3Ctag%20k%3D%22route%22%20v%3D%22bus%22%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Bus%20126%20%3A%20Parc%20de%20Saint-Cloud%20%E2%86%92%20Porte%20d%27Orleans-Metro%22%2F%3E%0A%3Ctag%20k%3D%22from%22%20v%3D%22Parc%20de%20Saint-Cloud%22%2F%3E%0A%3Ctag%20k%3D%22to%22%20v%3D%22Porte%20d%27Orleans-Metro%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%22126%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22RATP%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%2389C7D6%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route dans JOSM</a> (attention aux doublons)
+</th></tr>
+<tr><td>name:Bus 126 : Parc de Saint-Cloud → Porte d'Orleans-Metro</td></tr>
+<tr><td>from:Parc de Saint-Cloud</td></tr>
+<tr><td>to:Porte d'Orleans-Metro</td></tr>
+<tr><td>network:RATP</td></tr>
+<tr><td>ref:126</td></tr>
+<tr><td>colour:#89C7D6</td></tr>
+</table>
+<iframe name="hide" style="display: None;"></iframe>
+<div>
+<div style="width: 640px; float: left;">
+<table id="stops" class="main">
+<tr><th>name</th><th>OSM?</th><th>ajout</th><th>?</th></tr>
+
+<tr>
+<td style="background-color:#00FF00";>Parc de Saint-Cloud</td>
+<td style="background-color:#95FF00";>Parc de Saint-Cloud (node similaire à 100%) - distance 59 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.222145&right=2.222745&top=48.842883&bottom=48.842283" onclick="map.fitBounds([[48.842283,2.222145],[48.842883,2.222745]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>La Colline</td>
+<td style="background-color:#25FF00";>La Colline (node similaire à 100%) - distance 16 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.220309&right=2.220909&top=48.841605&bottom=48.841005" onclick="map.fitBounds([[48.841005,2.220309],[48.841605,2.220909]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Pont de Saint-Cloud - Rive Gauche</td>
+<td style="background-color:#10FF00";>Pont de Saint-Cloud Rive Gauche (node similaire à 100%) - distance 8 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.221767&right=2.222367&top=48.841229&bottom=48.840629" onclick="map.fitBounds([[48.840629,2.221767],[48.841229,2.222367]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0500";>Rhin et Danube-Metro.</td>
+<td style="background-color:#4CFF00";>Pont de Saint-Cloud - Albert Kahn (node similaire à 2%) - distance 31 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.226288&right=2.226888&top=48.841189&bottom=48.840589&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Rhin et Danube-Metro.&select=node1003155580" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.226288&right=2.226888&top=48.841189&bottom=48.840589" onclick="map.fitBounds([[48.840589,2.226288],[48.841189,2.226888]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#92FF00";>Rhin et Danube-Metro</td>
+<td style="background-color:#51FF00";>Rhin et Danube (node similaire à 71%) - distance 33 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.229271&right=2.229871&top=48.840364&bottom=48.839764" onclick="map.fitBounds([[48.839764,2.229271],[48.840364,2.229871]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFDA00";>Ancienne Mairie de Boulogne-Billancourt</td>
+<td style="background-color:#37FF00";>Ancienne Mairie (node similaire à 43%) - distance 23 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.234505&right=2.235105&top=48.83788&bottom=48.83728" onclick="map.fitBounds([[48.83728,2.234505],[48.83788,2.235105]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#4FFF00";>Hotel de Ville de Boulogne-Billancourt</td>
+<td style="background-color:#08FF00";>Hôtel de Ville de Boulogne-Billancourt (node similaire à 84%) - distance 5 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.239397&right=2.239997&top=48.835852&bottom=48.835252" onclick="map.fitBounds([[48.835252,2.239397],[48.835852,2.239997]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#83FF00";>Marcel Sembat-Metro</td>
+<td style="background-color:#13FF00";>Marcel Sembat (node similaire à 74%) - distance 9 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.242422&right=2.243022&top=48.834264&bottom=48.833664" onclick="map.fitBounds([[48.833664,2.242422],[48.834264,2.243022]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Danjou</td>
+<td style="background-color:#10FF00";>Danjou (node similaire à 100%) - distance 8 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.247802&right=2.248402&top=48.832983&bottom=48.832383" onclick="map.fitBounds([[48.832383,2.247802],[48.832983,2.248402]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Rue du Point du Jour</td>
+<td style="background-color:#28FF00";>Rue du Point du Jour (node similaire à 100%) - distance 17 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.253426&right=2.254026&top=48.832097&bottom=48.831497" onclick="map.fitBounds([[48.831497,2.253426],[48.832097,2.254026]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Quai du Point du Jour</td>
+<td style="background-color:#1BFF00";>Quai du Point du Jour (node similaire à 100%) - distance 12 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.257212&right=2.257812&top=48.831174&bottom=48.830574" onclick="map.fitBounds([[48.830574,2.257212],[48.831174,2.257812]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#59FF00";>Issy-val de Seine</td>
+<td style="background-color:#0BFF00";>Issy–Val de Seine RER (node similaire à 82%) - distance 6 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.263014&right=2.263614&top=48.829371&bottom=48.828771" onclick="map.fitBounds([[48.828771,2.263014],[48.829371,2.263614]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#69FF00";>President Robert Schuman</td>
+<td style="background-color:#06FF00";>Président Robert Schuman (node similaire à 79%) - distance 4 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.267821&right=2.268421&top=48.828008&bottom=48.827408" onclick="map.fitBounds([[48.827408,2.267821],[48.828008,2.268421]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Victor Hugo</td>
+<td style="background-color:#44FF00";>Victor Hugo (node similaire à 100%) - distance 28 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.272381&right=2.272981&top=48.828091&bottom=48.827491" onclick="map.fitBounds([[48.827491,2.272381],[48.828091,2.272981]]);" target="hide">zoom JOSM</a></td>
+</tr>

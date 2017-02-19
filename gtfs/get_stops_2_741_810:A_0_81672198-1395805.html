@@ -1,0 +1,299 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<title>Interface GTFS</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+	</head>
+<body>
+<p><a href="type_of_pt.html">Home</a>
+ - <a href="get_agency_2.html">Train</a>
+ - <a href="get_routes_2_741.html">741</a>
+ - <a href="get_trips_2_741_810:A_0.html">810:A 0</a>
+ 81672198-1395805
+</p>
+<p><button onclick="get_itin()">Itinéraire</button></p>
+<p id="load_josm"></p>
+<table id="osm"><tr>
+<th><a href="http://localhost:8111/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route%22%2F%3E%0A%3Ctag%20k%3D%22route%22%20v%3D%22bus%22%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Train%20A%20%3A%20Gare%20de%20Marne%20la%20Vallee%20Chessy%20%E2%86%92%20Gare%20de%20Poissy%22%2F%3E%0A%3Ctag%20k%3D%22from%22%20v%3D%22Gare%20de%20Marne%20la%20Vallee%20Chessy%22%2F%3E%0A%3Ctag%20k%3D%22to%22%20v%3D%22Gare%20de%20Poissy%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%22A%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22RER%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%23E10022%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route dans JOSM</a> (attention aux doublons)
+</th></tr>
+<tr><td>name:Train A : Gare de Marne la Vallee Chessy → Gare de Poissy</td></tr>
+<tr><td>from:Gare de Marne la Vallee Chessy</td></tr>
+<tr><td>to:Gare de Poissy</td></tr>
+<tr><td>network:RER</td></tr>
+<tr><td>ref:A</td></tr>
+<tr><td>colour:#E10022</td></tr>
+</table>
+<iframe name="hide" style="display: None;"></iframe>
+<div>
+<div style="width: 640px; float: left;">
+<table id="stops" class="main">
+<tr><th>name</th><th>OSM?</th><th>ajout</th><th>?</th></tr>
+
+<tr>
+<td style="background-color:#FFCA00";>Gare de Marne la Vallee Chessy</td>
+<td style="background-color:#20FF00";>Marne-la-Vallée Chessy - Parc Disneyland (RER) (node similaire à 40%) - distance 14 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.781927&right=2.782527&top=48.87025&bottom=48.86965" onclick="map.fitBounds([[48.86965,2.781927],[48.87025,2.782527]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#B1FF00";>Gare de val d Europe</td>
+<td style="background-color:#35FF00";>Val d'Europe (node similaire à 65%) - distance 22 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.773134&right=2.773734&top=48.855695&bottom=48.855095" onclick="map.fitBounds([[48.855095,2.773134],[48.855695,2.773734]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#F5FF00";>Gare de Bussy St Georges</td>
+<td style="background-color:#AAFF00";>Bussy Saint-Georges (node similaire à 52%) - distance 67 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.708682&right=2.709282&top=48.836836&bottom=48.836236" onclick="map.fitBounds([[48.836236,2.708682],[48.836836,2.709282]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFDA00";>Gare de Torcy</td>
+<td style="background-color:#8AFF00";>Torcy (node similaire à 43%) - distance 55 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.65483&right=2.65543&top=48.839946&bottom=48.839346" onclick="map.fitBounds([[48.839346,2.65483],[48.839946,2.65543]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF8700";>Gare de Lognes</td>
+<td style="background-color:#5CFF00";>Lognes - Le Mandinet (node similaire à 27%) - distance 37 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.632911&right=2.633511&top=48.839519&bottom=48.838919" onclick="map.fitBounds([[48.838919,2.632911],[48.839519,2.633511]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFA100";>Gare de Noisiel</td>
+<td style="background-color:#4FFF00";>Noisiel - Le Luzard (node similaire à 32%) - distance 32 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.615652&right=2.616252&top=48.843792&bottom=48.843192" onclick="map.fitBounds([[48.843192,2.615652],[48.843792,2.616252]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFE400";>Gare de Noisy Champs</td>
+<td style="background-color:#C4FF00";>Noisy-Champs - Champy-Nesles (node similaire à 45%) - distance 77 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.579786&right=2.580386&top=48.843185&bottom=48.842585" onclick="map.fitBounds([[48.842585,2.579786],[48.843185,2.580386]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#5EFF00";>Gare de Noisy le Grand Mont d est</td>
+<td style="background-color:#08FF00";>Noisy-le-Grand — Mont d’Est (node similaire à 81%) - distance 5 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.547475&right=2.548075&top=48.841143&bottom=48.840543" onclick="map.fitBounds([[48.840543,2.547475],[48.841143,2.548075]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#B7FF00";>Gare de bry sur Marne</td>
+<td style="background-color:#54FF00";>Bry-sur-Marne (node similaire à 64%) - distance 34 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.525623&right=2.526223&top=48.845201&bottom=48.844601" onclick="map.fitBounds([[48.844601,2.525623],[48.845201,2.526223]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#9DFF00";>Gare de Neuilly Plaisance</td>
+<td style="background-color:#1DFF00";>Neuilly-Plaisance (node similaire à 69%) - distance 13 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.513525&right=2.514125&top=48.853786&bottom=48.853186" onclick="map.fitBounds([[48.853186,2.513525],[48.853786,2.514125]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#5EFF00";>Gare de val de Fontenay RER a</td>
+<td style="background-color:#1BFF00";>Val-de-Fontenay (RER A) (node similaire à 81%) - distance 12 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.487888&right=2.488488&top=48.854096&bottom=48.853496" onclick="map.fitBounds([[48.853496,2.487888],[48.854096,2.488488]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#E0FF00";>Gare de Vincennes</td>
+<td style="background-color:#20FF00";>Vincennes (node similaire à 56%) - distance 14 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.433&right=2.4336&top=48.847608&bottom=48.847008" onclick="map.fitBounds([[48.847008,2.433],[48.847608,2.4336]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#B7FF00";>Nation</td>
+<td style="background-color:#18FF00";>Nation (RER) (node similaire à 64%) - distance 11 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.395524&right=2.396124&top=48.848537&bottom=48.847937" onclick="map.fitBounds([[48.847937,2.395524],[48.848537,2.396124]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Gare de Lyon RER a</td>
+<td style="background-color:#AFFF00";>Gare de Lyon RER A (node similaire à 100%) - distance 69 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.37296&right=2.37356&top=48.844439&bottom=48.843839" onclick="map.fitBounds([[48.843839,2.37296],[48.844439,2.37356]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#92FF00";>Chatelet les Halles</td>
+<td style="background-color:#63FF00";>Châtelet-les-Halles (node similaire à 71%) - distance 40 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.346713&right=2.347313&top=48.862122&bottom=48.861522" onclick="map.fitBounds([[48.861522,2.346713],[48.862122,2.347313]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Auber</td>
+<td style="background-color:#3AFF00";>Auber (node similaire à 100%) - distance 24 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.329627&right=2.330227&top=48.872457&bottom=48.871857" onclick="map.fitBounds([[48.871857,2.329627],[48.872457,2.330227]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#A2FF00";>Charles de Gaulle Etoile</td>
+<td style="background-color:#61FF00";>Charles de Gaulle — Étoile (RER) (node similaire à 68%) - distance 39 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.294191&right=2.294791&top=48.874538&bottom=48.873938" onclick="map.fitBounds([[48.873938,2.294191],[48.874538,2.294791]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF9C00";>Gare de la Defense RER a</td>
+<td style="background-color:#1BFF00";>La Défense - Grande Arche (node similaire à 31%) - distance 12 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.236718&right=2.237318&top=48.892487&bottom=48.891887" onclick="map.fitBounds([[48.891887,2.236718],[48.892487,2.237318]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#E5FF00";>Gare de Nanterre Prefecture</td>
+<td style="background-color:#4CFF00";>Nanterre Préfecture (node similaire à 55%) - distance 31 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.222913&right=2.223513&top=48.896045&bottom=48.895445" onclick="map.fitBounds([[48.895445,2.222913],[48.896045,2.223513]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#BCFF00";>Gare de Houilles Carrieres sur Seine</td>
+<td style="background-color:#0EFF00";>Houilles - Carrières-Sur-Seine (node similaire à 63%) - distance 7 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.185053&right=2.185653&top=48.920679&bottom=48.920079" onclick="map.fitBounds([[48.920079,2.185053],[48.920679,2.185653]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#C1FF00";>Gare de Sartrouville</td>
+<td style="background-color:#25FF00";>Sartrouville (node similaire à 62%) - distance 16 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.156787&right=2.157387&top=48.938036&bottom=48.937436" onclick="map.fitBounds([[48.937436,2.156787],[48.938036,2.157387]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#A2FF00";>Gare de Maisons Laffitte</td>
+<td style="background-color:#00FF00";>Maisons-Laffitte (node similaire à 68%) - distance 2 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.144259&right=2.144859&top=48.946096&bottom=48.945496" onclick="map.fitBounds([[48.945496,2.144259],[48.946096,2.144859]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#C6FF00";>Gare d'Acheres Grand Cormier</td>
+<td style="background-color:#ACFF00";>Achères-Grand Cormier (node similaire à 61%) - distance 68 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.093222&right=2.093822&top=48.955702&bottom=48.955102" onclick="map.fitBounds([[48.955102,2.093222],[48.955702,2.093822]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFEF00";>Gare de Poissy</td>
+<td style="background-color:#06FF00";>Poissy (node similaire à 47%) - distance 4 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.040772&right=2.041372&top=48.933565&bottom=48.932965" onclick="map.fitBounds([[48.932965,2.040772],[48.933565,2.041372]]);" target="hide">zoom JOSM</a></td>
+</tr>
+</table>
+</div>
+<div id="map" style="width: 640px; height: 400px; float: left;">
+</div></div>
+
+
+<script type='text/javascript'> // couche "osmfr" 
+var osmfr = L.tileLayer('http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', 
+{
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu cquest',
+    minZoom: 1,
+    maxZoom: 20
+});
+  
+// liste des couches de base
+var baseMaps = {
+    "Rendu FR": osmfr
+};
+var geojsonFeature ={
+  "type":"Feature",
+  "geometry": {
+	"type":"GeometryCollection",
+	"geometries": [
+	{"type":"LineString","coordinates":[[2.782227,48.86995],[2.773434,48.855395],[2.708982,48.836536],[2.65513,48.839646],[2.633211,48.839219],[2.615952,48.843492],[2.580086,48.842885],[2.547775,48.840843],[2.525923,48.844901],[2.513825,48.853486],[2.488188,48.853796],[2.4333,48.847308],[2.395824,48.848237],[2.37326,48.844139],[2.347013,48.861822],[2.329927,48.872157],[2.294491,48.874238],[2.237018,48.892187],[2.223213,48.895745],[2.185353,48.920379],[2.157087,48.937736],[2.144559,48.945796],[2.093522,48.955402],[2.041072,48.933265]]},
+	{"type":"Point","coordinates":[2.782227,48.86995]}]},
+
+  "properties": {
+	"name":"test"
+  }
+};
+
+
+map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr] } );
+json = L.geoJSON(geojsonFeature).addTo(map); 
+
+var myStyle = {
+    "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var nodes = [];
+var legs;
+var loadurl="http://localhost:8111/load_object?referrers=true&objects=";
+
+
+function get_itin() {
+var geojsonLayer = new L.GeoJSON.AJAX("http://router.project-osrm.org/match/v1/driving/2.782227,48.86995;2.773434,48.855395;2.708982,48.836536;2.65513,48.839646;2.633211,48.839219;2.615952,48.843492;2.580086,48.842885;2.547775,48.840843;2.525923,48.844901;2.513825,48.853486;2.488188,48.853796;2.4333,48.847308;2.395824,48.848237;2.37326,48.844139;2.347013,48.861822;2.329927,48.872157;2.294491,48.874238;2.237018,48.892187;2.223213,48.895745;2.185353,48.920379;2.157087,48.937736;2.144559,48.945796;2.093522,48.955402;2.041072,48.933265?timestamps=1487431440;1487431560;1487431800;1487432040;1487432160;1487432280;1487432460;1487432640;1487432760;1487432880;1487433060;1487433360;1487433540;1487433660;1487433900;1487434020;1487434200;1487434500;1487434620;1487434920;1487435160;1487435280;1487435520;1487435880&radiuses=20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20&overview=full&geometries=geojson&generate_hints=false&annotations=true",{
+	style:myStyle,
+	middleware:function(data){
+legs = data.matchings[0].legs;
+for(var i in legs) {
+nodes.push(legs[i].annotation.nodes);
+}
+
+for(i=0; i < nodes.length; i++){
+for(j=0; j < nodes[i].length; j++) {
+	loadurl += "n" + nodes[i][j] + ",";
+}
+}
+
+document.getElementById("load_josm").innerHTML = '<a href="'+loadurl+'" target="hide">Load JOSM</a>';
+
+		return data.matchings[0].geometry;
+	}
+});
+
+geojsonLayer.addTo(map);
+};
+
+
+
+map.fitBounds(json.getBounds());
+jj=json.getLayers()[0]._layers;
+
+idx=Object.keys(jj)[0]
+
+//debugger;
+var decorator = L.polylineDecorator(jj[idx]._latlngs, 
+{
+    patterns: [
+            {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: 
+{fillOpacity: 1, weight: 0}})}
+        ]
+}).addTo(map);
+
+// ajout de l'échelle
+L.control.scale().addTo(map);
+
+</script>
+
+
+</body>
+</html>

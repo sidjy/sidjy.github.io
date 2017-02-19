@@ -1,0 +1,173 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<title>Interface GTFS</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+	</head>
+<body>
+<p><a href="type_of_pt.html">Home</a>
+ - <a href="get_agency_3.html">Bus</a>
+ - <a href="get_routes_3_368.html">368</a>
+ - <a href="get_trips_3_368_003351503:503_0.html">003351503:503 0</a>
+ 80025705-1119696
+</p>
+<p><button onclick="get_itin()">Itinéraire</button></p>
+<p id="load_josm"></p>
+<table id="osm"><tr>
+<th><a href="http://localhost:8111/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route%22%2F%3E%0A%3Ctag%20k%3D%22route%22%20v%3D%22bus%22%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Bus%20503%20%3A%20Sapins%20%E2%86%92%20Coll%C3%A8ge%20a.%20de%20Garlande%22%2F%3E%0A%3Ctag%20k%3D%22from%22%20v%3D%22Sapins%22%2F%3E%0A%3Ctag%20k%3D%22to%22%20v%3D%22Coll%C3%A8ge%20a.%20de%20Garlande%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%22503%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22Sit%27bus%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%23913DFF%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route dans JOSM</a> (attention aux doublons)
+</th></tr>
+<tr><td>name:Bus 503 : Sapins → Collège a. de Garlande</td></tr>
+<tr><td>from:Sapins</td></tr>
+<tr><td>to:Collège a. de Garlande</td></tr>
+<tr><td>network:Sit'bus</td></tr>
+<tr><td>ref:503</td></tr>
+<tr><td>colour:#913DFF</td></tr>
+</table>
+<iframe name="hide" style="display: None;"></iframe>
+<div>
+<div style="width: 640px; float: left;">
+<table id="stops" class="main">
+<tr><th>name</th><th>OSM?</th><th>ajout</th><th>?</th></tr>
+
+<tr>
+<td style="background-color:#00FF00";>Sapins</td>
+<td style="background-color:#FFD700";>Sapins (node similaire à 100%) - distance 115 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.656254&right=2.656854&top=48.789876&bottom=48.789276" onclick="map.fitBounds([[48.789276,2.656254],[48.789876,2.656854]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Parc des Sources</td>
+<td style="background-color:#10FF00";>Parc des Sources (node similaire à 100%) - distance 8 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.652095&right=2.652695&top=48.792673&bottom=48.792073" onclick="map.fitBounds([[48.792073,2.652095],[48.792673,2.652695]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Petit Pont</td>
+<td style="background-color:#0EFF00";>Petit Pont (node similaire à 100%) - distance 7 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.654227&right=2.654827&top=48.794232&bottom=48.793632" onclick="map.fitBounds([[48.793632,2.654227],[48.794232,2.654827]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Roissy RER</td>
+<td style="background-color:#06FF00";> (node similaire à 0%) - distance 4 m
+</td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.649092&right=2.649692&top=48.795503&bottom=48.794903&addtags=highway=bus_stop%7Cpublic_transport=platform%7Cname=Roissy RER&select=node2837931032" target="hide">compléter arrêt</a></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.649092&right=2.649692&top=48.795503&bottom=48.794903" onclick="map.fitBounds([[48.794903,2.649092],[48.795503,2.649692]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Lycée Charles le Chauve</td>
+<td style="background-color:#37FF00";>Lycée Charles le Chauve (node similaire à 100%) - distance 23 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.648094&right=2.648694&top=48.799146&bottom=48.798546" onclick="map.fitBounds([[48.798546,2.648094],[48.799146,2.648694]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#83FF00";>Collège a. de Garlande</td>
+<td style="background-color:#0BFF00";>Collège Anceau de Garlande (node similaire à 74%) - distance 6 m
+</td>
+<td></td>
+<td><a href="http://localhost:8111/load_and_zoom?left=2.637784&right=2.638384&top=48.799577&bottom=48.798977" onclick="map.fitBounds([[48.798977,2.637784],[48.799577,2.638384]]);" target="hide">zoom JOSM</a></td>
+</tr>
+</table>
+</div>
+<div id="map" style="width: 640px; height: 400px; float: left;">
+</div></div>
+
+
+<script type='text/javascript'> // couche "osmfr" 
+var osmfr = L.tileLayer('http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', 
+{
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu cquest',
+    minZoom: 1,
+    maxZoom: 20
+});
+  
+// liste des couches de base
+var baseMaps = {
+    "Rendu FR": osmfr
+};
+var geojsonFeature ={
+  "type":"Feature",
+  "geometry": {
+	"type":"GeometryCollection",
+	"geometries": [
+	{"type":"LineString","coordinates":[[2.656554,48.789576],[2.652395,48.792373],[2.654527,48.793932],[2.649392,48.795203],[2.648394,48.798846],[2.638084,48.799277]]},
+	{"type":"Point","coordinates":[2.656554,48.789576]}]},
+
+  "properties": {
+	"name":"test"
+  }
+};
+
+
+map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr] } );
+json = L.geoJSON(geojsonFeature).addTo(map); 
+
+var myStyle = {
+    "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var nodes = [];
+var legs;
+var loadurl="http://localhost:8111/load_object?referrers=true&objects=";
+
+
+function get_itin() {
+var geojsonLayer = new L.GeoJSON.AJAX("http://router.project-osrm.org/match/v1/driving/2.656554,48.789576;2.652395,48.792373;2.654527,48.793932;2.649392,48.795203;2.648394,48.798846;2.638084,48.799277?timestamps=1487408280;1487408340;1487408400;1487408520;1487408820;1487409120&radiuses=20;20;20;20;20;20&overview=full&geometries=geojson&generate_hints=false&annotations=true",{
+	style:myStyle,
+	middleware:function(data){
+legs = data.matchings[0].legs;
+for(var i in legs) {
+nodes.push(legs[i].annotation.nodes);
+}
+
+for(i=0; i < nodes.length; i++){
+for(j=0; j < nodes[i].length; j++) {
+	loadurl += "n" + nodes[i][j] + ",";
+}
+}
+
+document.getElementById("load_josm").innerHTML = '<a href="'+loadurl+'" target="hide">Load JOSM</a>';
+
+		return data.matchings[0].geometry;
+	}
+});
+
+geojsonLayer.addTo(map);
+};
+
+
+
+map.fitBounds(json.getBounds());
+jj=json.getLayers()[0]._layers;
+
+idx=Object.keys(jj)[0]
+
+//debugger;
+var decorator = L.polylineDecorator(jj[idx]._latlngs, 
+{
+    patterns: [
+            {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: 
+{fillOpacity: 1, weight: 0}})}
+        ]
+}).addTo(map);
+
+// ajout de l'échelle
+L.control.scale().addTo(map);
+
+</script>
+
+
+</body>
+</html>
