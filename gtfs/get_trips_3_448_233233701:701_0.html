@@ -5,6 +5,13 @@
 		<meta http-equiv="Content-Script-Type" content="text/javascript" />
 		<meta http-equiv="Content-Style-Type" content="text/css" />
 		<title>Interface GTFS</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.6.0/clipboard.min.js"></script>
+		<script src="https://cdn.rawgit.com/jfirebaugh/leaflet-osm/09acdf8f/leaflet-osm.js"></script>
+
 	</head>
 <body>
 <p><a href="type_of_pt.html">Home</a>
@@ -24,15 +31,57 @@
 <td>80
  %</td>
 </tr>
-</table><p id="load_josm"></p>
-<table id="osm"><tr>
-<th><a href="http://localhost:8111/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route_master%22%2F%3E%0A%3Ctag%20k%3D%22route_master%22%20v%3D%22bus%22%20%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Bus%20701%20%20%3A%20Gare%20du%20Ch%C3%AAnay%20Gagny%20%E2%86%94%20Gare%20du%20Ch%C3%AAnay%20Gagny%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%22701%20%22%2F%3E%0A%3Ctag%20k%3D%22ref%3AFR%3ASTIF%3AExternalCode_Line%22%20v%3D%22233233701%3A701%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22Autobus%20du%20Fort%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%230060F0%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route_master dans JOSM</a> (attention aux doublons)
-</th></tr>
-<tr><td>name: Bus 701  : Gare du Chênay Gagny ↔ Gare du Chênay Gagny</td></tr>
-<tr><td>network: Autobus du Fort</td></tr>
-<tr><td>ref: 701 </td></tr>
-<tr><td>ref:FR:STIF:ExternalCode_Line: 233233701:701</td></tr>
-<tr><td>colour: #0060F0</td></tr>
-</table>
+</table><p>Il y a 1 relation route_master dans OpenStreetmap !<p>
+
+<p><a href="http://api.openstreetmap.org/api/0.6/relation/2196022/full">2196022</a></p>
+<p><a href="http://localhost:8111/import?url=http://api.openstreetmap.org/api/0.6/relation/2196022">charger JOSM</a></p>
+
+<div id="map" style="width: 640px; height: 400px; float: left;"></div>
+<script type='text/javascript'>
+// couche "osmfr"
+var osmfr = L.tileLayer('http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+{
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu cquest',
+    minZoom: 1,
+    maxZoom: 20
+});
+
+// liste des couches de base
+var baseMaps = {
+    "Rendu FR": osmfr
+};
+map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr] } );
+
+var myStyle = {
+    "color": "#0060F0",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var geojsonMarkerOptions = {
+    radius: 8,
+    fillColor: "#0060F0",
+    color: "#000",
+    weight: 1,
+    opacity: 1,
+    fillOpacity: 0.8
+};
+
+
+var myData = { "type": "GeometryCollection", "geometries": [{"type":"Point","coordinates":[2.5638512,48.8763527]},{"type":"LineString","coordinates":[[2.5695714,48.876343],[2.5694762,48.8762421]]},{"type":"Point","coordinates":[2.5576998,48.8768731]},{"type":"LineString","coordinates":[[2.5553862,48.8755924],[2.5564935,48.8758373],[2.5573957,48.8760369],[2.5574815,48.8760559],[2.5575917,48.8760803]]},{"type":"LineString","coordinates":[[2.5645495,48.8777289],[2.5645739,48.8776646],[2.5648994,48.8768063],[2.5648957,48.8767312]]},{"type":"Point","coordinates":[2.5695592,48.8765344]},{"type":"LineString","coordinates":[[2.5571609,48.8765247],[2.5571554,48.8763941]]},{"type":"Point","coordinates":[2.5642544,48.8765355]},{"type":"LineString","coordinates":[[2.5690235,48.8777558],[2.5694784,48.8766042],[2.5695478,48.8764092],[2.5695714,48.876343]]},{"type":"LineString","coordinates":[[2.5690235,48.8777558],[2.5689491,48.8779489],[2.5688219,48.8779628],[2.5677789,48.878077],[2.5665993,48.8781954],[2.5654956,48.8783145],[2.5654351,48.878321],[2.5653006,48.8783367],[2.5651694,48.8783521]]},{"type":"Point","coordinates":[2.560796,48.8765242]},{"type":"LineString","coordinates":[[2.5645658,48.8767605],[2.5645407,48.8767224],[2.5644785,48.8766278],[2.5644312,48.8765497],[2.5642997,48.8764728]]},{"type":"LineString","coordinates":[[2.5642997,48.8764728],[2.5646284,48.8765658],[2.5647739,48.8766097],[2.5648351,48.876627],[2.5648815,48.8766438],[2.5649921,48.8766819],[2.5650518,48.8766886],[2.5651148,48.8766872],[2.5652592,48.8766854]]},{"type":"LineString","coordinates":[[2.5652592,48.8766854],[2.5659383,48.8766144],[2.566107,48.8765968],[2.5665042,48.8765522],[2.5672849,48.8764734],[2.5673799,48.8764632],[2.56844,48.8763492],[2.5685311,48.8763387],[2.5685935,48.8763321],[2.5693407,48.8762531],[2.5694161,48.8762451],[2.5694762,48.8762421]]},{"type":"LineString","coordinates":[[2.5642997,48.8764728],[2.5641002,48.876413],[2.5638552,48.8763885],[2.5625209,48.8764393],[2.5607098,48.8765735],[2.5606319,48.8765792],[2.5605373,48.87659],[2.5593655,48.8767234],[2.558603,48.8767691],[2.5577913,48.8769061],[2.5574989,48.8769793],[2.5573213,48.8770306]]},{"type":"LineString","coordinates":[[2.5651694,48.8783521],[2.5651291,48.8783116],[2.5645875,48.8777671],[2.5645495,48.8777289]]},{"type":"LineString","coordinates":[[2.5526992,48.8766167],[2.552586,48.8766036]]},{"type":"LineString","coordinates":[[2.5571554,48.8763941],[2.5570685,48.876372],[2.5570013,48.876355],[2.5568038,48.8763139],[2.5565793,48.8762885],[2.5564003,48.8762696],[2.5562666,48.8762555],[2.5559691,48.876264],[2.5533297,48.8765294]]},{"type":"LineString","coordinates":[[2.5648957,48.8767312],[2.5648117,48.876739],[2.5647095,48.8767479],[2.5645658,48.8767605]]},{"type":"Point","coordinates":[2.5657062,48.878324]},{"type":"LineString","coordinates":[[2.5533297,48.8765294],[2.5530123,48.8765864],[2.5528986,48.8765974],[2.5528372,48.8766033],[2.5527824,48.8766165],[2.5526992,48.8766167]]},{"type":"LineString","coordinates":[[2.5571554,48.8763941],[2.5573278,48.8763075],[2.5574581,48.8762106],[2.5575917,48.8760803]]},{"type":"LineString","coordinates":[[2.552586,48.8766036],[2.5525679,48.8765295],[2.5524221,48.8759345],[2.5524132,48.875898]]},{"type":"Point","coordinates":[2.5602812,48.8766799]},{"type":"LineString","coordinates":[[2.5524132,48.875898],[2.5525025,48.87589],[2.5525772,48.875859],[2.5526207,48.8758295],[2.5527023,48.8758061],[2.5528105,48.8757945],[2.5529064,48.8758016],[2.5529858,48.8758251],[2.5530755,48.8758209],[2.5552686,48.875604],[2.5553862,48.8755924]]},{"type":"Point","coordinates":[2.5685802,48.8780153]},{"type":"LineString","coordinates":[[2.5573213,48.8770306],[2.5572581,48.8769106]]},{"type":"Point","coordinates":[2.5576677,48.876986]},{"type":"Point","coordinates":[2.5528665,48.8766244]},{"type":"LineString","coordinates":[[2.5572581,48.8769106],[2.5571609,48.8765247]]},{"type":"Point","coordinates":[2.5668301,48.8764824]}]};
+
+json = L.geoJSON(myData, {
+    style: myStyle,
+    pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, geojsonMarkerOptions);
+    }
+}).addTo(map);
+
+map.fitBounds(json.getBounds());
+
+
+
+</script>
+
 </body>
 </html>
