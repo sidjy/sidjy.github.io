@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.2/leaflet.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.2/leaflet.js"></script>
+ 
+ <link rel="stylesheet" href="https://cdn.rawgit.com/yohanboniface/Leaflet.EditInOSM/d529b0a4/Leaflet.EditInOSM.css" />
+ <script src="https://cdn.rawgit.com/yohanboniface/Leaflet.EditInOSM/d529b0a4/Leaflet.EditInOSM.js"></script>
+ 
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-hash/0.2.1/leaflet-hash.min.js"></script>
+ 
+  <script src="https://cdn.rawgit.com/ardhi/Leaflet.MousePosition/c32f1c84/src/L.Control.MousePosition.js"></script>
+  
+   <script src="https://cdn.rawgit.com/sidjy/leaflet-ugeojson/2b3044d2/src/leaflet.uGeoJSON.js"></script>
+
+
+<link rel="stylesheet" href="https://cdn.rawgit.com/komoot/leaflet.photon/86cc8a36/leaflet.photon.css" />
+<script src="https://cdn.rawgit.com/komoot/leaflet.photon/86cc8a36/leaflet.photon.js"></script>
+
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+
+<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/L.Control.Locate.min.js'></script>
+<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/L.Control.Locate.mapbox.css' rel='stylesheet' />
+<!--[if lt IE 9]>
+  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/L.Control.Locate.ie.css' rel='stylesheet' />
+<![endif]-->
+<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/css/font-awesome.min.css' rel='stylesheet' />	
+	
+  <link rel="stylesheet" href="https://sidjy.github.io/lib/OverPassLayer.css" />
+  <script src="https://sidjy.github.io/lib/OverPassLayer.js"></script>
+  
+  <style>
+    body { margin:0; padding:0; }
+    #map { position:absolute; top:0; bottom:0; width:100%; }
+    
+.photon-autocomplete li .type {
+    font-family: 'open_sanslight';
+    font-weight: normal;
+    float: right;
+    font-size: 0.8em;
+}
+    
+  </style>
+</head>
+<body>
+<div id='map'></div>
+<script type='text/javascript'>
+function $_GET(param) {
+	var vars = {};
+	window.location.href.replace( location.hash, '' ).replace( 
+		/[?&]+([^=&]+)=?([^&]*)?/gi, // regexp
+		function( m, key, value ) { // callback
+			vars[key] = value !== undefined ? value : '';
+		}
+	);
+	if ( param ) {
+		return vars[param] ? vars[param] : null;	
+	}
+	return vars;
+}	
+var APE_param = $_GET('ape');
+	
+var geojsonMarkerOptionsSIRENE = {
+    radius: 8,
+    fillColor: "#ff7800",
+    color: "#000",
+    weight: 1,
+    opacity: 1,
+    fillOpacity: 0.8
+};
+
+String.prototype.capitalize = function(){
+        return this.toLowerCase().replace( /\b\w/g, function (m) {
+            return m.toUpperCase();
+        });
+    };
+	
+function onEachFeatureSIRENE(feature, layer) {
+    // does this feature have a property named popupContent?
+    //if (feature.properties && feature.properties.popupContent) {
+//        layer.bindPopup("<p>"+feature.properties.l1_normalisee
+//			+"("+feature.properties.l2_normalisee+" - "+feature.properties.siret+")</p><p>"
+//			+feature.properties.l3_normalisee+"</p><p>"
+//			+feature.properties.l4_normalisee+"</p><p>"
+//		       +feature.properties.libapen+"</p><p>"
+//		       +feature.properties.libtefen+"</p><p>"
+//		       );
+	
+	layer.bindPopup(`<table><tr><th>clé</th><th>valeur</th></tr>
+			<tr><td>name</td><td>${feature.properties.l1_normalisee.capitalize()} - ${feature.properties.l2_normalisee.capitalize()}</td></tr>
+			<tr><td>ref:FR:SIRET</td><td>${feature.properties.siret}</td></tr>
+			<tr><td>start_date</td><td>${feature.properties.dcret}</td></tr>
+			<tr><td>activité</td><td>${feature.properties.libapen}</td></tr>
+			<tr><td>salariés</td><td>${feature.properties.libtefen}</td></tr>
+			<tr><td>adresse</td><td>${feature.properties.l4_normalisee}</td></tr>
+			</table>
+			`);
+    //}
+}	
+	
+	
+// couche "osmfr"
+var osmfr = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu cquest',
+    minZoom: 1,
+    maxZoom: 20
+});
+var hot = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu ybon',
+    minZoom: 1,
+    maxZoom: 20
+});
+var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: 'Tuiles OSM - donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL',
+    minZoom: 1,
+    maxZoom: 20
+  });
+var carto = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_nolabels/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  });
+	
+//var mapquest =   L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png', {
+//    attribution: 'Tuiles <a href="http://www.mapquest.com/" target="_blank">&copy; MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png"> - donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL',
+//    minZoom: 1,
+//    maxZoom: 20
+//  });
+//var ortho =   L.tileLayer('http://proxy-ign.openstreetmap.fr/bdortho/{z}/{x}/{y}.jpg', {
+//    attribution: 'Tuiles <a href="http://openstreetmap.fr/bdortho" target="_blank">&copy; IGN</a>',
+//    minZoom: 6,
+//    maxZoom: 19
+//  });
+var landscape = L.tileLayer('http://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png', {
+    attribution: 'Tuiles <a href="http://www.thunderforest.com/landscape/" target="_blank">&copy; Gravitystorm Limited</a> - donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL',
+    minZoom: 1,
+    maxZoom: 18
+  });
+var transport = L.tileLayer('http://{s}.tile.thunderforest.com/transport/{z}/{x}/{y}.png', {
+    attribution: 'Tuiles <a href="http://www.thunderforest.com/transport/" target="_blank">&copy; Gravitystorm Limited</a> - donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL',
+    minZoom: 1,
+    maxZoom: 18
+  });
+  
+var cycle = L.tileLayer('http://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png', {
+    attribution: 'Tuiles <a href="http://www.thunderforest.com/cycle/" target="_blank">&copy; Gravitystorm Limited</a> - donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL',
+    minZoom: 1,
+    maxZoom: 18
+  });
+  
+var outdoors = L.tileLayer('http://{s}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png', {
+    attribution: 'Tuiles <a href="http://www.thunderforest.com/outdoors/" target="_blank">&copy; Gravitystorm Limited</a> - donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL',
+    minZoom: 1,
+    maxZoom: 18
+  });
+var river =   L.tileLayer( 'http://{s}.tile.openstreetmap.fr/openriverboatmap/{z}/{x}/{y}.png', {
+    attribution: 'Calque &copy; ybon -  - donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL',
+    minZoom: 1,
+    maxZoom: 20
+  });
+var bw = L.tileLayer('http://www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png', {
+		attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL',
+    minZoom: 1,
+    maxZoom: 20
+  });
+var route500 = L.tileLayer('http://{s}.tile.openstreetmap.fr/route500/{z}/{x}/{y}.png', {
+	attribution: 'Route500 &copy; IGN - LO/OL',
+    minZoom: 1,
+    maxZoom: 20
+  });
+var carthage = L.tileLayer('http://{s}.tile.openstreetmap.fr/route500hydro/{z}/{x}/{y}.png', {
+		attribution: 'BD Carthage (IGN/ONEMA) - LO/OL',
+    minZoom: 1,
+    maxZoom: 20
+  });
+var sea =   L.tileLayer( 'http://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+    attribution: '<a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL',
+    minZoom: 1,
+    maxZoom: 20
+  });
+var relief = L.tileLayer('http://tiles2.openpistemap.org/landshaded/{z}/{x}/{y}.png', {
+	attribution: 'Relief openpistemap (source NASA SRTMv3 + ASTER)',
+    minZoom: 1,
+    maxZoom: 16
+  });
+var fradm = L.tileLayer('http://{s}.tile.openstreetmap.fr/fradm/{z}/{x}/{y}.png', {
+    attribution: 'FR-ADM &copy; <a href="http://wiki.openstreetmap.org/wiki/FR:Servers/tile.openstreetmap.fr">OSM-FR/cquest</a>',
+    minZoom: 1,
+    maxZoom: 20
+  });
+var adm4 = L.tileLayer('http://{s}.layers.openstreetmap.fr/admin4/{z}/{x}/{y}.png', {
+    attribution: 'FR-ADM &copy; <a href="http://wiki.openstreetmap.org/wiki/FR:Servers/tile.openstreetmap.fr">OSM-FR/cquest</a>',
+    minZoom: 5,
+    maxZoom: 20
+  });
+var adm6 = L.tileLayer('http://{s}.layers.openstreetmap.fr/admin6/{z}/{x}/{y}.png', {
+    attribution: 'FR-ADM &copy; <a href="http://wiki.openstreetmap.org/wiki/FR:Servers/tile.openstreetmap.fr">OSM-FR/cquest</a>',
+    minZoom: 5,
+    maxZoom: 20
+  });
+  
+var adm7 = L.tileLayer('http://{s}.layers.openstreetmap.fr/admin7/{z}/{x}/{y}.png', {
+    attribution: 'FR-ADM &copy; <a href="http://wiki.openstreetmap.org/wiki/FR:Servers/tile.openstreetmap.fr">OSM-FR/cquest</a>',
+    minZoom: 6,
+    maxZoom: 20
+  });  
+var adm8 = L.tileLayer('http://{s}.layers.openstreetmap.fr/admin8/{z}/{x}/{y}.png', {
+    attribution: 'FR-ADM &copy; <a href="http://wiki.openstreetmap.org/wiki/FR:Servers/tile.openstreetmap.fr">OSM-FR/cquest</a>',
+    minZoom: 8,
+    maxZoom: 20
+  });
+var qa = L.tileLayer('http://{s}.tile.openstreetmap.fr/qa/{z}/{x}/{y}.png', {
+    attribution: 'QA &copy; <a href="http://wiki.openstreetmap.org/wiki/FR:Servers/tile.openstreetmap.fr">OSM-FR/cquest</a> - donn&eacute;es OSM/INSEE/DGFiP',
+    minZoom: 1,
+    maxZoom: 20
+  });
+var bano = L.tileLayer('http://{s}.layers.openstreetmap.fr/bano/{z}/{x}/{y}.png', {
+    attribution: '<a href="https://wiki.openstreetmap.org/wiki/WikiProject_France/WikiProject_Base_Adresses_Nationale_Ouverte_(BANO)">BANO</a> - Calque &copy; <a href="http://wiki.openstreetmap.org/wiki/User:Cquest">cquest</a>',
+    minZoom: 1,
+    maxZoom: 20
+  });
+var wms = L.tileLayer('http://wms.openstreetmap.fr/tms/1.0.0/tous_fr/{z}/{x}/{y}', {
+    attribution: 'images a&eacute;riennes en opendata (sources diverses)',
+    minZoom: 1,
+    maxZoom: 20
+  });
+var cadastre = L.tileLayer('http://tms.cadastre.openstreetmap.fr/*/tout/{z}/{x}/{y}.png', {
+    attribution: 'cadastre',
+    minZoom: 1,
+    maxZoom: 20
+  });
+var cadastreT = L.tileLayer('http://tms.cadastre.openstreetmap.fr/*/transp/{z}/{x}/{y}.png', {
+    attribution: 'cadastre transparent',
+    minZoom: 1,
+    maxZoom: 20
+  });
+	
+	
+var oim_attr = '<a href="https://openinframap.org/about.html">About OpenInfraMap</a>'
+var oim_tileserver = 'https://tiles-{s}.openinframap.org';
+var power = L.tileLayer(oim_tileserver + '/power/{z}/{x}/{y}.png',
+                        {attribution: oim_attr});
+var comms = L.tileLayer(oim_tileserver + '/telecoms/{z}/{x}/{y}.png',
+                        {attribution: oim_attr});
+var petroleum = L.tileLayer(oim_tileserver + '/petroleum/{z}/{x}/{y}.png',
+                        {attribution: oim_attr});
+var water = L.tileLayer(oim_tileserver + '/water/{z}/{x}/{y}.png?2',
+                        {attribution: oim_attr});
+var hft = L.tileLayer(oim_tileserver + '/microwave_hft/{z}/{x}/{y}.png?1',
+                        {attribution: 'Ofcom, <a href="https://carte-fh.lafibre.info/">carte-fh.lafibre.info</a>'});	
+	
+//OverPassAPI overlay
+var opl = new L.OverPassLayer({
+  minzoom: 10,
+  query: "node(BBOX)['historic'='memorial'];out;",	
+  callback: function(data) {
+    for(var i=0;i<data.elements.length;i++) {
+      var e = data.elements[i];
+      if (e.id in this.instance._ids) return;
+      this.instance._ids[e.id] = true;
+      var pos = new L.LatLng(e.lat, e.lon);
+      var popup = this.instance._poiInfo(e.tags,e.id);
+      var color = e.tags["ref:FR:MemorialGenWeb"] ? 'green':'red';
+      
+	  var link = document.createElement("a");
+		link.target="_blank";
+		link.href = "http://rawedit.openstreetmap.fr/edit/node/" + e.id;
+		link.appendChild(document.createTextNode("RawEdit"));
+	  popup.appendChild(link);
+	  
+	  var link2 = document.createElement("a");
+		link2.target="_blank";
+		link2.href = "http://www.memorialgenweb.org/memorial3/html/fr/resultcommune.php?idsource=" + e.tags["ref:FR:MemorialGenWeb"];
+		link2.appendChild(document.createTextNode("|MemorialGenWeb"));
+	  popup.appendChild(link2);
+	  
+	  
+	  var circle = L.circle(pos, 50, {
+        color: color,
+        fillColor: '#fa3',
+        fillOpacity: 0.5
+      })
+      .bindPopup(popup);
+      this.instance.addLayer(circle);
+    }
+  },
+});
+//OverPassAPI overlay
+var egl = new L.OverPassLayer({
+  minzoom: 10,
+  query: "node(BBOX)['amenity'='place_of_worship'];out;",	
+  callback: function(data) {
+    for(var i=0;i<data.elements.length;i++) {
+      var e = data.elements[i];
+      if (e.id in this.instance._ids) return;
+      this.instance._ids[e.id] = true;
+      var pos = new L.LatLng(e.lat, e.lon);
+      var popup = this.instance._poiInfo(e.tags,e.id);
+      var color = e.tags["ref:FR:CEF"] ? 'green':'red';
+      
+	  var link = document.createElement("a");
+		link.target="_blank";
+		link.href = "http://rawedit.openstreetmap.fr/edit/node/" + e.id;
+		link.appendChild(document.createTextNode("RawEdit"));
+	  popup.appendChild(link);
+	  
+	  var link2 = document.createElement("a");
+		link2.target="_blank";
+		link2.href = "http://egliseinfo.catholique.fr/lieu/" + e.tags["ref:FR:CEF"];
+		link2.appendChild(document.createTextNode("|CEF"));
+	  popup.appendChild(link2);
+	  
+	  
+	  var circle = L.circle(pos, 50, {
+        color: color,
+        fillColor: '#fa3',
+        fillOpacity: 0.5
+      })
+      .bindPopup(popup);
+      this.instance.addLayer(circle);
+    }
+  },
+});	
+  
+	// todo : complete
+var siren = new L.uGeoJSONLayer({
+	pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, geojsonMarkerOptionsSIRENE);
+    	},
+	minzoom: 14,
+	endpoint:"https://opendata.rte-france.com/api/records/1.0/search/?dataset=lignes-souterraines&rows=50&format=geojson",
+//	endpoint:"https://data.opendatasoft.com/api/records/1.0/search/?dataset=sirene%40public&rows=30&format=geojson&q=apet700+%3D+"+APE_param+"&facet=categorie&facet=proden&facet=libapen&facet=siege&facet=libreg_new&facet=saisonat&facet=libtefen&facet=depet&facet=libnj&facet=libtca&facet=liborigine&exclude.libapen=Location+de+logements%2C+Conseil+pour+les+affaires+et+autres+conseils+de+gestion&exclude.libapen=Location+de+logements&exclude.libapen=Location+de+terrains+et+d%27autres+biens+immobiliers",
+	debug: false,
+	usebbox: true,
+	onEachFeature: onEachFeatureSIRENE,
+});	
+  
+//var ggl = new L.Google();
+//var ggl2 = new L.Google('TERRAIN');  
+  
+// liste des couches de base
+var baseMaps = {
+    //"Rendu HOT-HDM": hot,
+    "OSM/Mapnik - international": osm,
+    "Rendu FR": osmfr,
+    //"Carto": carto,
+    //"MapQuest": mapquest,
+    //"Outdoor": outdoors,
+    //"Cycle": cycle,
+    "Transport": transport,
+    //"Landscape": landscape,
+    //"OpenRiverBoat": river,
+    //"OSM monochrome": bw,
+	"Cadastre": cadastre,
+	//"GMap": ggl
+	//"GMap2": ggl2
+	//"IGN Ortho": ortho
+};
+var overlays = {
+	"Sirene": siren,
+	"Route500 IGN": route500,
+	"BD Carthage": carthage,
+	//"OpenSeaMap": sea,
+	//"Ombrage": relief,
+	"Limites admin. FR": fradm,
+	//"Régions": adm4,
+	//"Départements": adm6,
+	//"Arrondissements": adm7,
+	//"Communes": adm8,
+	//"'QA' - Zone &agrave; compl&eacute;ter": qa,
+	"'BANO' - Couverture": bano,
+	//"Images a&eacute;riennes opendata": wms,
+	"Cadastre Transparent": cadastreT,
+	//"Monuments aux morts":opl,
+	//"Eglises": egl,
+	//"Electricité": power,
+  	//"Telecoms": comms,
+  	//"Petroleum": petroleum,
+  	//"Water": water,
+	//"Microwave (HFT)": hft
+};
+var searchPoints = L.geoJson(null, {
+        onEachFeature: function (feature, layer) {
+            layer.bindPopup(feature.properties.name);
+        }
+    });
+function showSearchPoints(geojson) {
+    console.debug('begin handler');
+    searchPoints.clearLayers();
+    searchPoints.addData(geojson);
+    console.debug('end handler');
+};
+function myHandler(geojson) {
+    console.debug(geojson);
+};
+var formatResult = function (feature, el) {
+    var title = L.DomUtil.create('strong', '', el),
+        detailsContainer = L.DomUtil.create('small', '', el),
+        details = [];
+    title.innerHTML = feature.properties.label || feature.properties.name;
+    var types = {
+        housenumber: 'numéro',
+        street: 'rue',
+        locality: 'lieu-dit',
+        hamlet: 'hameau',
+        village: 'village',
+        city: 'ville',
+        commune: 'commune'
+    };
+    if (types[feature.properties.type]) L.DomUtil.create('span', 'type', title).innerHTML = types[feature.properties.type];
+    if (feature.properties.city && feature.properties.city !== feature.properties.name) {
+        details.push(feature.properties.city);
+    }
+    if (feature.properties.context) details.push(feature.properties.context);
+    detailsContainer.innerHTML = details.join(', ');
+};
+var SHORT_CITY_NAMES = ['y', 'ay', 'bu', 'by', 'eu', 'fa', 'gy', 'oo', 'oz', 'py', 'ri', 'ry', 'sy', 'ur', 'us', 'uz'];
+var photonControlOptions = {
+    resultsHandler: showSearchPoints,
+    placeholder: 'Adresse',
+    position: 'topleft',
+    url: 'https://api-adresse.data.gouv.fr/search/?',
+    formatResult: formatResult,
+    noResultLabel: 'Aucun résultat',
+    minChar: function (val) {
+        return SHORT_CITY_NAMES.indexOf(val) !== -1 || val.length >= 3;
+    },
+    submitDelay: 200
+};
+// création de la carte, centrée sur la France
+map = L.map('map', { center: [47.000,2.000], zoom: 14, layers: [osm,siren], editInOSMControlOptions: { position: 'bottomright' }, photonControl: true, photonControlOptions: photonControlOptions } );
+searchPoints.addTo(map);
+// ajout de l'échelle
+L.control.scale().addTo(map);
+// ajout de la géolocalisation
+var lc = L.control.locate({ follow: false, setView: 'once', keepCurrentZoomLevel: true }).addTo(map);
+//map.locate({watch: true});
+map.on('dragstart', lc._stopFollowing, lc);
+// ajout du sélecteur de couches
+L.control.layers(baseMaps, overlays).addTo(map);
+// ajout de la position du curseur
+L.control.mousePosition( { position: 'bottomright' } ).addTo(map);
+// ajout de la gestion des URL 
+var hash = new L.Hash(map);
+</script>
+</body>
+</html>
