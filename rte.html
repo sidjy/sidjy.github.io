@@ -62,7 +62,7 @@ function $_GET(param) {
 var APE_param = $_GET('ape');
 	
 var geojsonMarkerOptionsSIRENE = {
-    radius: 3,
+    radius: 4,
     fillColor: "#ff7800",
     color: "#000",
     weight: 1,
@@ -80,6 +80,7 @@ function PowerPaint(feature) {
 
 var myStyle = {
     "color": "#ff7800",
+    "fillColor": "#ff7800",
     "weight": 3,
     "opacity": 0.65,
     "dashArray": null,
@@ -93,7 +94,8 @@ switch (feature.properties.tension_max) {
 	case '90 kV': myStyle.color="#ff7f00"; break;	
 	case '63 kV': myStyle.color="#9f024c"; break;
 };
-	
+
+myStyle.fillColor=myStyle.color;	
 switch (feature.properties.type_ouvrage) {
 	case 'SOUTERRAIN': myStyle.opacity=0.5; myStyle.dashArray="5, 10";break;
 	case 'AERIEN': myStyle.opacity=1; myStyle.dashArray=null;break;
@@ -120,8 +122,12 @@ function onEachFeatureSIRENE(feature, layer) {
 //		       +feature.properties.libtefen+"</p><p>"
 //		       );
 
-	if (feature.properties.nom_ouvrage) {
+if (feature.properties.nom_ouvrage) {
 		feature.properties.nom_ouvrage_1=feature.properties.nom_ouvrage;
+	}
+
+if (feature.properties.identification) {
+		feature.properties.identification_1=feature.properties.identification;
 	}
 
 if (feature.properties && feature.properties.geoshape) {
@@ -187,6 +193,7 @@ switch (feature.properties.nombre_de_circuits) {
 			<tr><td>ref4</td><td>${feature.properties.identification_4}</td></tr>
 			<tr><td>ref5</td><td>${feature.properties.identification_5}</td></tr>
 			<tr><td>precision</td><td>${feature.properties.classe_de_precision}</td></tr>
+			<tr><td>etat</td><td>${feature.properties.etat}</td></tr>
 			</table>
 			`);
     //}
@@ -415,6 +422,18 @@ var egl = new L.OverPassLayer({
 });	
   
 	// todo : complete
+var pylones = new L.uGeoJSONLayer({
+	pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, geojsonMarkerOptionsSIRENE);
+    	},
+	minzoom: 16,
+	endpoint:"https://opendata.rte-france.com/api/records/1.0/search/?dataset=pylones&rows=200&format=geojson",
+	debug: false,
+	usebbox: true,
+	onEachFeature: onEachFeatureSIRENE,
+	style : PowerPaint,
+});	
+
 var souterrain = new L.uGeoJSONLayer({
 	pointToLayer: function (feature, latlng) {
         return L.circleMarker(latlng, geojsonMarkerOptionsSIRENE);
@@ -464,7 +483,8 @@ var baseMaps = {
 };
 var overlays = {
 	"Aerien": aerien,
-	"Soutterain": souterrain,
+	"Souterrain": souterrain,
+	"Pylones": pylones,
 	"Route500 IGN": route500,
 	"BD Carthage": carthage,
 	//"OpenSeaMap": sea,
