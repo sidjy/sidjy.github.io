@@ -1,0 +1,475 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<title>Interface GTFS</title>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+		<script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.1.0/leaflet.polylineDecorator.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.6.0/clipboard.min.js"></script>
+		<script src="https://cdn.rawgit.com/jfirebaugh/leaflet-osm/09acdf8f/leaflet-osm.js"></script>
+
+	</head>
+<body>
+<p><a href="type_of_pt.html">Home</a>
+ - <a href="get_agency_3.html">Bus</a>
+ - <a href="get_routes_3_339.html">339</a>
+ - <a href="get_trips_3_339_014014011:11_0.html">014014011:11 0</a>
+ 84488271-1408143
+</p>
+<p><button onclick="get_itin()">Itinéraire</button></p>
+<p id="load_josm"></p>
+<table id="osm"><tr>
+<th><a href="https://localhost:8112/load_data?new_layer=false&data=%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0A%3Cosm%20version%3D%220.6%22%20upload%3D%22false%22%3E%0A%3Crelation%20id%3D%22-1%22%3E%0A%3Ctag%20k%3D%22type%22%20v%3D%22route%22%2F%3E%0A%3Ctag%20k%3D%22route%22%20v%3D%22bus%22%2F%3E%0A%3Ctag%20k%3D%22public_transport%3Aversion%22%20v%3D%222%22%2F%3E%0A%3Ctag%20k%3D%22name%22%20v%3D%22Bus%2011%20%3A%20Victor%20Basch%20%E2%86%92%20March%C3%A9%20de%20Saint-Denis%20t1%20t5%22%2F%3E%0A%3Ctag%20k%3D%22from%22%20v%3D%22Victor%20Basch%22%2F%3E%0A%3Ctag%20k%3D%22to%22%20v%3D%22March%C3%A9%20de%20Saint-Denis%20t1%20t5%22%2F%3E%0A%3Ctag%20k%3D%22ref%22%20v%3D%2211%22%2F%3E%0A%3Ctag%20k%3D%22network%22%20v%3D%22CIF%22%2F%3E%0A%3Ctag%20k%3D%22colour%22%20v%3D%22%23B233FF%22%2F%3E%0A%3C%2Frelation%3E%0A%3C%2Fosm%3E%0A" target="hide">Créer la relation route dans JOSM</a> (attention aux doublons)
+</th></tr>
+<tr><td>name:Bus 11 : Victor Basch → Marché de Saint-Denis t1 t5</td></tr>
+<tr><td>from:Victor Basch</td></tr>
+<tr><td>to:Marché de Saint-Denis t1 t5</td></tr>
+<tr><td>network:CIF</td></tr>
+<tr><td>ref:11</td></tr>
+<tr><td>colour:#B233FF</td></tr>
+</table>
+<iframe name="hide" style="display: None;"></iframe>
+<div>
+<div style="width: 640px; float: left;">
+<table id="stops" class="main">
+<tr><th>name</th><th>OSM?</th><th>ajout</th><th>?</th></tr>
+
+<tr>
+<td style="background-color:#00FF00";>Victor Basch [419675]</td>
+<td style="background-color:#2FFF00";>Victor Basch (node similaire à 100%) - distance 20 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=419675" onclick="map.fitBounds([[49.029751,2.475164],[49.030351,2.475764]]);window.open('https://localhost:8112/load_and_zoom?left=2.475164&right=2.475764&top=49.030351&bottom=49.029751','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.475164&right=2.475764&top=49.030351&bottom=49.029751" onclick="map.fitBounds([[49.029751,2.475164],[49.030351,2.475764]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Mairie [38013]</td>
+<td style="background-color:#1DFF00";>Mairie (node similaire à 100%) - distance 13 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38013" onclick="map.fitBounds([[49.031882,2.47383],[49.032482,2.47443]]);window.open('https://localhost:8112/load_and_zoom?left=2.47383&right=2.47443&top=49.032482&bottom=49.031882','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.47383&right=2.47443&top=49.032482&bottom=49.031882" onclick="map.fitBounds([[49.031882,2.47383],[49.032482,2.47443]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>La Charmeuse [419734]</td>
+<td style="background-color:#32FF00";>La Charmeuse (node similaire à 100%) - distance 21 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=419734" onclick="map.fitBounds([[49.034113,2.471608],[49.034713,2.472208]]);window.open('https://localhost:8112/load_and_zoom?left=2.471608&right=2.472208&top=49.034713&bottom=49.034113','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.471608&right=2.472208&top=49.034713&bottom=49.034113" onclick="map.fitBounds([[49.034113,2.471608],[49.034713,2.472208]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Les Montagnettes [38042]</td>
+<td style="background-color:#15FF00";>Les Montagnettes (node similaire à 100%) - distance 10 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38042" onclick="map.fitBounds([[49.035625,2.469986],[49.036225,2.470586]]);window.open('https://localhost:8112/load_and_zoom?left=2.469986&right=2.470586&top=49.036225&bottom=49.035625','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.469986&right=2.470586&top=49.036225&bottom=49.035625" onclick="map.fitBounds([[49.035625,2.469986],[49.036225,2.470586]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#D6FF00";>École Gabriel Péri [37989]</td>
+<td style="background-color:#44FF00";>École Péri (node similaire à 58%) - distance 28 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=37989" onclick="map.fitBounds([[49.037955,2.467518],[49.038555,2.468118]]);window.open('https://localhost:8112/load_and_zoom?left=2.467518&right=2.468118&top=49.038555&bottom=49.037955','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.467518&right=2.468118&top=49.038555&bottom=49.037955" onclick="map.fitBounds([[49.037955,2.467518],[49.038555,2.468118]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Henri Dunant [38015]</td>
+<td style="background-color:#49FF00";>Henri Dunant (node similaire à 100%) - distance 30 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38015" onclick="map.fitBounds([[49.036836,2.463593],[49.037436,2.464193]]);window.open('https://localhost:8112/load_and_zoom?left=2.463593&right=2.464193&top=49.037436&bottom=49.036836','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.463593&right=2.464193&top=49.037436&bottom=49.036836" onclick="map.fitBounds([[49.036836,2.463593],[49.037436,2.464193]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Descartes [37987]</td>
+<td style="background-color:#25FF00";>Descartes (node similaire à 100%) - distance 16 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=37987" onclick="map.fitBounds([[49.038609,2.460877],[49.039209,2.461477]]);window.open('https://localhost:8112/load_and_zoom?left=2.460877&right=2.461477&top=49.039209&bottom=49.038609','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.460877&right=2.461477&top=49.039209&bottom=49.038609" onclick="map.fitBounds([[49.038609,2.460877],[49.039209,2.461477]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Montgolfier [38044]</td>
+<td style="background-color:#7BFF00";>Montgolfier (node similaire à 100%) - distance 49 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38044" onclick="map.fitBounds([[49.038711,2.457761],[49.039311,2.458361]]);window.open('https://localhost:8112/load_and_zoom?left=2.457761&right=2.458361&top=49.039311&bottom=49.038711','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.457761&right=2.458361&top=49.039311&bottom=49.038711" onclick="map.fitBounds([[49.038711,2.457761],[49.039311,2.458361]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Chapellerie [38484]</td>
+<td style="background-color:#03FF00";>Chapellerie (node similaire à 100%) - distance 3 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38484" onclick="map.fitBounds([[49.037761,2.455052],[49.038361,2.455652]]);window.open('https://localhost:8112/load_and_zoom?left=2.455052&right=2.455652&top=49.038361&bottom=49.037761','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.455052&right=2.455652&top=49.038361&bottom=49.037761" onclick="map.fitBounds([[49.037761,2.455052],[49.038361,2.455652]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Ampère/Chartrel [37948]</td>
+<td style="background-color:#49FF00";>Ampère - Chartrel (node similaire à 100%) - distance 30 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=37948" onclick="map.fitBounds([[49.035703,2.455922],[49.036303,2.456522]]);window.open('https://localhost:8112/load_and_zoom?left=2.455922&right=2.456522&top=49.036303&bottom=49.035703','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.455922&right=2.456522&top=49.036303&bottom=49.035703" onclick="map.fitBounds([[49.035703,2.455922],[49.036303,2.456522]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Avenue des Tilleuls [38102]</td>
+<td style="background-color:#70FF00";>Avenue des Tilleuls (node similaire à 100%) - distance 45 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38102" onclick="map.fitBounds([[49.032627,2.457938],[49.033227,2.458538]]);window.open('https://localhost:8112/load_and_zoom?left=2.457938&right=2.458538&top=49.033227&bottom=49.032627','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.457938&right=2.458538&top=49.033227&bottom=49.032627" onclick="map.fitBounds([[49.032627,2.457938],[49.033227,2.458538]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Centre de Secours [38089]</td>
+<td style="background-color:#22FF00";>Centre de Secours (node similaire à 100%) - distance 15 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38089" onclick="map.fitBounds([[49.029813,2.459639],[49.030413,2.460239]]);window.open('https://localhost:8112/load_and_zoom?left=2.459639&right=2.460239&top=49.030413&bottom=49.029813','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.459639&right=2.460239&top=49.030413&bottom=49.029813" onclick="map.fitBounds([[49.029813,2.459639],[49.030413,2.460239]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Marché [37997]</td>
+<td style="background-color:#56FF00";>Marché (node similaire à 100%) - distance 35 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=37997" onclick="map.fitBounds([[49.027448,2.461205],[49.028048,2.461805]]);window.open('https://localhost:8112/load_and_zoom?left=2.461205&right=2.461805&top=49.028048&bottom=49.027448','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.461205&right=2.461805&top=49.028048&bottom=49.027448" onclick="map.fitBounds([[49.027448,2.461205],[49.028048,2.461805]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Sécurité Sociale [38763]</td>
+<td style="background-color:#18FF00";>Sécurité Sociale (node similaire à 100%) - distance 11 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38763" onclick="map.fitBounds([[49.025452,2.462567],[49.026052,2.463167]]);window.open('https://localhost:8112/load_and_zoom?left=2.462567&right=2.463167&top=49.026052&bottom=49.025452','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.462567&right=2.463167&top=49.026052&bottom=49.025452" onclick="map.fitBounds([[49.025452,2.462567],[49.026052,2.463167]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Carrefour de l Europe [38478]</td>
+<td style="background-color:#FAFF00";>Carrefour de l'Europe (node similaire à 100%) - distance 98 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38478" onclick="map.fitBounds([[49.022277,2.464978],[49.022877,2.465578]]);window.open('https://localhost:8112/load_and_zoom?left=2.464978&right=2.465578&top=49.022877&bottom=49.022277','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.464978&right=2.465578&top=49.022877&bottom=49.022277" onclick="map.fitBounds([[49.022277,2.464978],[49.022877,2.465578]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Calvaire [38460]</td>
+<td style="background-color:#42FF00";>Calvaire (node similaire à 100%) - distance 27 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38460" onclick="map.fitBounds([[49.015236,2.469537],[49.015836,2.470137]]);window.open('https://localhost:8112/load_and_zoom?left=2.469537&right=2.470137&top=49.015836&bottom=49.015236','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.469537&right=2.470137&top=49.015836&bottom=49.015236" onclick="map.fitBounds([[49.015236,2.469537],[49.015836,2.470137]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Le Moulin [38569]</td>
+<td style="background-color:#FFF100";>Rond-Point du Thillay (node similaire à 0%) - distance 105 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38569" onclick="map.fitBounds([[49.011037,2.471616],[49.011637,2.472216]]);window.open('https://localhost:8112/load_and_zoom?left=2.471616&right=2.472216&top=49.011637&bottom=49.011037','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.471616&right=2.472216&top=49.011637&bottom=49.011037" onclick="map.fitBounds([[49.011037,2.471616],[49.011637,2.472216]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Pont Chinois [419706]</td>
+<td style="background-color:#47FF00";>Pont Chinois (node similaire à 100%) - distance 29 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=419706" onclick="map.fitBounds([[49.007667,2.471444],[49.008267,2.472044]]);window.open('https://localhost:8112/load_and_zoom?left=2.471444&right=2.472044&top=49.008267&bottom=49.007667','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.471444&right=2.472044&top=49.008267&bottom=49.007667" onclick="map.fitBounds([[49.007667,2.471444],[49.008267,2.472044]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#49FF00";>Les Charmilles [419723]</td>
+<td style="background-color:#18FF00";>Charmilles (node similaire à 85%) - distance 11 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=419723" onclick="map.fitBounds([[49.004944,2.47156],[49.005544,2.47216]]);window.open('https://localhost:8112/load_and_zoom?left=2.47156&right=2.47216&top=49.005544&bottom=49.004944','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.47156&right=2.47216&top=49.005544&bottom=49.004944" onclick="map.fitBounds([[49.004944,2.47156],[49.005544,2.47216]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Mairie [38796]</td>
+<td style="background-color:#03FF00";>Mairie (node similaire à 100%) - distance 3 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38796" onclick="map.fitBounds([[49.00224,2.47061],[49.00284,2.47121]]);window.open('https://localhost:8112/load_and_zoom?left=2.47061&right=2.47121&top=49.00284&bottom=49.00224','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.47061&right=2.47121&top=49.00284&bottom=49.00224" onclick="map.fitBounds([[49.00224,2.47061],[49.00284,2.47121]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Pont à l'Huile [38690]</td>
+<td style="background-color:#6EFF00";>Pont à l'Huile (node similaire à 100%) - distance 44 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38690" onclick="map.fitBounds([[49.001149,2.465622],[49.001749,2.466222]]);window.open('https://localhost:8112/load_and_zoom?left=2.465622&right=2.466222&top=49.001749&bottom=49.001149','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.465622&right=2.466222&top=49.001749&bottom=49.001149" onclick="map.fitBounds([[49.001149,2.465622],[49.001749,2.466222]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFDF00";>Hôpital de Gonesse [422530]</td>
+<td style="background-color:#0EFF00";>Centre Hospitalier de Gonesse (node similaire à 44%) - distance 7 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=422530" onclick="map.fitBounds([[48.993059,2.450293],[48.993659,2.450893]]);window.open('https://localhost:8112/load_and_zoom?left=2.450293&right=2.450893&top=48.993659&bottom=48.993059','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.450293&right=2.450893&top=48.993659&bottom=48.993059" onclick="map.fitBounds([[48.993059,2.450293],[48.993659,2.450893]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Cimetière [37977]</td>
+<td style="background-color:#03FF00";>Cimetière (node similaire à 100%) - distance 3 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=37977" onclick="map.fitBounds([[48.989607,2.451665],[48.990207,2.452265]]);window.open('https://localhost:8112/load_and_zoom?left=2.451665&right=2.452265&top=48.990207&bottom=48.989607','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.451665&right=2.452265&top=48.990207&bottom=48.989607" onclick="map.fitBounds([[48.989607,2.451665],[48.990207,2.452265]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Emmanuel Rain [421898]</td>
+<td style="background-color:#42FF00";>Emmanuel Rain (node similaire à 100%) - distance 27 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=421898" onclick="map.fitBounds([[48.986318,2.451944],[48.986918,2.452544]]);window.open('https://localhost:8112/load_and_zoom?left=2.451944&right=2.452544&top=48.986918&bottom=48.986318','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.451944&right=2.452544&top=48.986918&bottom=48.986318" onclick="map.fitBounds([[48.986318,2.451944],[48.986918,2.452544]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Fontaine Cypierre [421846]</td>
+<td style="background-color:#00FF00";> (node similaire à 0%) - distance 2 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=421846" onclick="map.fitBounds([[48.98455,2.458781],[48.98515,2.459381]]);window.open('https://localhost:8112/load_and_zoom?left=2.458781&right=2.459381&top=48.98515&bottom=48.98455','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.458781&right=2.459381&top=48.98515&bottom=48.98455" onclick="map.fitBounds([[48.98455,2.458781],[48.98515,2.459381]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>La Malmaison [421896]</td>
+<td style="background-color:#FFFF00";>La Malmaison (node similaire à 100%) - distance 100 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=421896" onclick="map.fitBounds([[48.981596,2.456221],[48.982196,2.456821]]);window.open('https://localhost:8112/load_and_zoom?left=2.456221&right=2.456821&top=48.982196&bottom=48.981596','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.456221&right=2.456821&top=48.982196&bottom=48.981596" onclick="map.fitBounds([[48.981596,2.456221],[48.982196,2.456821]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Jean Jaurès [423609]</td>
+<td style="background-color:#8DFF00";>Jean Jaurès (node similaire à 100%) - distance 56 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=423609" onclick="map.fitBounds([[48.983551,2.440619],[48.984151,2.441219]]);window.open('https://localhost:8112/load_and_zoom?left=2.440619&right=2.441219&top=48.984151&bottom=48.983551','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.440619&right=2.441219&top=48.984151&bottom=48.983551" onclick="map.fitBounds([[48.983551,2.440619],[48.984151,2.441219]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Chemin du Moulin d'Etif [419766]</td>
+<td style="background-color:#03FF00";>Chemin du Moulin d'Etif (node similaire à 100%) - distance 3 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=419766" onclick="map.fitBounds([[48.983339,2.436714],[48.983939,2.437314]]);window.open('https://localhost:8112/load_and_zoom?left=2.436714&right=2.437314&top=48.983939&bottom=48.983339','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.436714&right=2.437314&top=48.983939&bottom=48.983339" onclick="map.fitBounds([[48.983339,2.436714],[48.983939,2.437314]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Lycée René Cassin [419708]</td>
+<td style="background-color:#03FF00";>Lycée René Cassin (node similaire à 100%) - distance 3 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=419708" onclick="map.fitBounds([[48.982479,2.43308],[48.983079,2.43368]]);window.open('https://localhost:8112/load_and_zoom?left=2.43308&right=2.43368&top=48.983079&bottom=48.982479','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.43308&right=2.43368&top=48.983079&bottom=48.982479" onclick="map.fitBounds([[48.982479,2.43308],[48.983079,2.43368]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Léon Blum [38611]</td>
+<td style="background-color:#9AFF00";>Léon Blum (node similaire à 100%) - distance 61 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38611" onclick="map.fitBounds([[48.981306,2.428149],[48.981906,2.428749]]);window.open('https://localhost:8112/load_and_zoom?left=2.428149&right=2.428749&top=48.981906&bottom=48.981306','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.428149&right=2.428749&top=48.981906&bottom=48.981306" onclick="map.fitBounds([[48.981306,2.428149],[48.981906,2.428749]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF9C00";>Mairie Annexe [22523]</td>
+<td style="background-color:#FF4B00";>Mairie d'Arnouville (node similaire à 31%) - distance 169 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=22523" onclick="map.fitBounds([[48.979036,2.422602],[48.979636,2.423202]]);window.open('https://localhost:8112/load_and_zoom?left=2.422602&right=2.423202&top=48.979636&bottom=48.979036','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.422602&right=2.423202&top=48.979636&bottom=48.979036" onclick="map.fitBounds([[48.979036,2.422602],[48.979636,2.423202]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Rond Point du Christ [22528]</td>
+<td style="background-color:#15FF00";>Rond Point du Christ (node similaire à 100%) - distance 10 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=22528" onclick="map.fitBounds([[48.97564,2.421641],[48.97624,2.422241]]);window.open('https://localhost:8112/load_and_zoom?left=2.421641&right=2.422241&top=48.97624&bottom=48.97564','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.421641&right=2.422241&top=48.97624&bottom=48.97564" onclick="map.fitBounds([[48.97564,2.421641],[48.97624,2.422241]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Collège Pablo Picasso [38579]</td>
+<td style="background-color:#00FF00";> (node similaire à 0%) - distance 2 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38579" onclick="map.fitBounds([[48.972992,2.417419],[48.973592,2.418019]]);window.open('https://localhost:8112/load_and_zoom?left=2.417419&right=2.418019&top=48.973592&bottom=48.972992','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.417419&right=2.418019&top=48.973592&bottom=48.972992" onclick="map.fitBounds([[48.972992,2.417419],[48.973592,2.418019]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Carnot [38464]</td>
+<td style="background-color:#0BFF00";> (node similaire à 0%) - distance 6 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38464" onclick="map.fitBounds([[48.970442,2.413647],[48.971042,2.414247]]);window.open('https://localhost:8112/load_and_zoom?left=2.413647&right=2.414247&top=48.971042&bottom=48.970442','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.413647&right=2.414247&top=48.971042&bottom=48.970442" onclick="map.fitBounds([[48.970442,2.413647],[48.971042,2.414247]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Verdun [22525]</td>
+<td style="background-color:#D3FF00";> (node similaire à 0%) - distance 83 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=22525" onclick="map.fitBounds([[48.967254,2.409971],[48.967854,2.410571]]);window.open('https://localhost:8112/load_and_zoom?left=2.409971&right=2.410571&top=48.967854&bottom=48.967254','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.409971&right=2.410571&top=48.967854&bottom=48.967254" onclick="map.fitBounds([[48.967254,2.409971],[48.967854,2.410571]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Croix Buard [38471]</td>
+<td style="background-color:#00FF00";> (node similaire à 0%) - distance 2 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38471" onclick="map.fitBounds([[48.965198,2.407511],[48.965798,2.408111]]);window.open('https://localhost:8112/load_and_zoom?left=2.407511&right=2.408111&top=48.965798&bottom=48.965198','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.407511&right=2.408111&top=48.965798&bottom=48.965198" onclick="map.fitBounds([[48.965198,2.407511],[48.965798,2.408111]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Antoine Demusois [38509]</td>
+<td style="background-color:#13FF00";> (node similaire à 0%) - distance 9 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38509" onclick="map.fitBounds([[48.962451,2.402417],[48.963051,2.403017]]);window.open('https://localhost:8112/load_and_zoom?left=2.402417&right=2.403017&top=48.963051&bottom=48.962451','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.402417&right=2.403017&top=48.963051&bottom=48.962451" onclick="map.fitBounds([[48.962451,2.402417],[48.963051,2.403017]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Limite des Départements [419605]</td>
+<td style="background-color:#7BFF00";>Limite des Départements (node similaire à 100%) - distance 49 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=419605" onclick="map.fitBounds([[48.958787,2.397799],[48.959387,2.398399]]);window.open('https://localhost:8112/load_and_zoom?left=2.397799&right=2.398399&top=48.959387&bottom=48.958787','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.397799&right=2.398399&top=48.959387&bottom=48.958787" onclick="map.fitBounds([[48.958787,2.397799],[48.959387,2.398399]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Stalingrad [416754]</td>
+<td style="background-color:#00FF00";> (node similaire à 0%) - distance 2 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=416754" onclick="map.fitBounds([[48.952931,2.390137],[48.953531,2.390737]]);window.open('https://localhost:8112/load_and_zoom?left=2.390137&right=2.390737&top=48.953531&bottom=48.952931','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.390137&right=2.390737&top=48.953531&bottom=48.952931" onclick="map.fitBounds([[48.952931,2.390137],[48.953531,2.390737]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Louis Bordes [416754]</td>
+<td style="background-color:#25FF00";> (node similaire à 0%) - distance 16 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=416754" onclick="map.fitBounds([[48.953021,2.39026],[48.953621,2.39086]]);window.open('https://localhost:8112/load_and_zoom?left=2.39026&right=2.39086&top=48.953621&bottom=48.953021','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.39026&right=2.39086&top=48.953621&bottom=48.953021" onclick="map.fitBounds([[48.953021,2.39026],[48.953621,2.39086]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Le Globe [38559]</td>
+<td style="background-color:#D3FF00";>Le Globe (node similaire à 100%) - distance 83 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38559" onclick="map.fitBounds([[48.949294,2.384689],[48.949894,2.385289]]);window.open('https://localhost:8112/load_and_zoom?left=2.384689&right=2.385289&top=48.949894&bottom=48.949294','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.384689&right=2.385289&top=48.949894&bottom=48.949294" onclick="map.fitBounds([[48.949294,2.384689],[48.949894,2.385289]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Paul Vaillant Couturier [38775]</td>
+<td style="background-color:#18FF00";>Paul Vaillant-Couturier (node similaire à 100%) - distance 11 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38775" onclick="map.fitBounds([[48.948675,2.381291],[48.949275,2.381891]]);window.open('https://localhost:8112/load_and_zoom?left=2.381291&right=2.381891&top=48.949275&bottom=48.948675','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.381291&right=2.381891&top=48.949275&bottom=48.948675" onclick="map.fitBounds([[48.948675,2.381291],[48.949275,2.381891]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Henri Barbusse [38779]</td>
+<td style="background-color:#FF0000";>no</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=38779" onclick="map.fitBounds([[48.946692,2.370906],[48.947292,2.371506]]);window.open('https://localhost:8112/load_and_zoom?left=2.370906&right=2.371506&top=48.947292&bottom=48.946692','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.370906&right=2.371506&top=48.947292&bottom=48.946692" onclick="map.fitBounds([[48.946692,2.370906],[48.947292,2.371506]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FFCA00";>Université Paris 8 [419703]</td>
+<td style="background-color:#4FFF00";>Saint-Denis - Université (node similaire à 40%) - distance 32 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=419703" onclick="map.fitBounds([[48.946263,2.364684],[48.946863,2.365284]]);window.open('https://localhost:8112/load_and_zoom?left=2.364684&right=2.365284&top=48.946863&bottom=48.946263','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.364684&right=2.365284&top=48.946863&bottom=48.946263" onclick="map.fitBounds([[48.946263,2.364684],[48.946863,2.365284]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#00FF00";>Lycée Paul Eluard [419524]</td>
+<td style="background-color:#1DFF00";>Lycée Paul Eluard (node similaire à 100%) - distance 13 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=419524" onclick="map.fitBounds([[48.941167,2.364272],[48.941767,2.364872]]);window.open('https://localhost:8112/load_and_zoom?left=2.364272&right=2.364872&top=48.941767&bottom=48.941167','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.364272&right=2.364872&top=48.941767&bottom=48.941167" onclick="map.fitBounds([[48.941167,2.364272],[48.941767,2.364872]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Cité Langevin [39932]</td>
+<td style="background-color:#0BFF00";> (node similaire à 0%) - distance 6 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=39932" onclick="map.fitBounds([[48.938652,2.360492],[48.939252,2.361092]]);window.open('https://localhost:8112/load_and_zoom?left=2.360492&right=2.361092&top=48.939252&bottom=48.938652','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.360492&right=2.361092&top=48.939252&bottom=48.938652" onclick="map.fitBounds([[48.938652,2.360492],[48.939252,2.361092]]);" target="hide">zoom JOSM</a></td>
+</tr>
+<tr>
+<td style="background-color:#FF0000";>Marché de Saint-Denis t1 t5 [419698]</td>
+<td style="background-color:#B4FF00";> (node similaire à 0%) - distance 71 m
+</td>
+<td><button class="cpy" data-clipboard-text="public_transport=platform ref:FR:STIF=419698" onclick="map.fitBounds([[48.939012,2.355186],[48.939612,2.355786]]);window.open('https://localhost:8112/load_and_zoom?left=2.355186&right=2.355786&top=48.939612&bottom=48.939012','hide');">Copy josm data: Ctrl+Maj+V</button></td>
+<td><a href="https://localhost:8112/load_and_zoom?left=2.355186&right=2.355786&top=48.939612&bottom=48.939012" onclick="map.fitBounds([[48.939012,2.355186],[48.939612,2.355786]]);" target="hide">zoom JOSM</a></td>
+</tr>
+</table>
+</div>
+<div id="map" style="width: 640px; height: 400px; float: left;">
+</div></div>
+
+
+<script type='text/javascript'>
+
+var btns = document.querySelectorAll('.cpy');
+    var clipboard = new Clipboard(btns);
+    clipboard.on('success', function(e) {
+        console.log(e);
+    });
+    clipboard.on('error', function(e) {
+        console.log(e);
+    });
+
+
+// couche "osmfr" 
+//var osmfr = L.tileLayer('http://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', 
+var osmfr = L.tileLayer('http://www.toolserver.org/tiles/bw-mapnik/{z}/{x}/{y}.png',
+{
+    attribution: 'donn&eacute;es &copy; <a href="http://osm.org/copyright">OpenStreetMap</a>/ODbL - rendu cquest',
+    minZoom: 1,
+    maxZoom: 20
+});
+  
+// liste des couches de base
+var baseMaps = {
+    "Rendu FR": osmfr
+};
+var geojsonFeature ={
+  "type":"Feature",
+  "geometry": {
+	"type":"GeometryCollection",
+	"geometries": [
+	{"type":"LineString","coordinates":[[2.475464,49.030051],[2.47413,49.032182],[2.471908,49.034413],[2.470286,49.035925],[2.467818,49.038255],[2.463893,49.037136],[2.461177,49.038909],[2.458061,49.039011],[2.455352,49.038061],[2.456222,49.036003],[2.458238,49.032927],[2.459939,49.030113],[2.461505,49.027748],[2.462867,49.025752],[2.465278,49.022577],[2.469837,49.015536],[2.471916,49.011337],[2.471744,49.007967],[2.47186,49.005244],[2.47091,49.00254],[2.465922,49.001449],[2.450593,48.993359],[2.451965,48.989907],[2.452244,48.986618],[2.459081,48.98485],[2.456521,48.981896],[2.440919,48.983851],[2.437014,48.983639],[2.43338,48.982779],[2.428449,48.981606],[2.422902,48.979336],[2.421941,48.97594],[2.417719,48.973292],[2.413947,48.970742],[2.410271,48.967554],[2.407811,48.965498],[2.402717,48.962751],[2.398099,48.959087],[2.390437,48.953231],[2.39056,48.953321],[2.384989,48.949594],[2.381591,48.948975],[2.371206,48.946992],[2.364984,48.946563],[2.364572,48.941467],[2.360792,48.938952],[2.355486,48.939312]]},
+	{"type":"Point","coordinates":[2.475464,49.030051]}]},
+
+  "properties": {
+	"name":"test"
+  }
+};
+
+
+map = L.map('map', { center: [47.000,2.000], zoom: 10, layers: [osmfr] } );
+json = L.geoJSON(geojsonFeature).addTo(map); 
+
+var myStyle = {
+    "color": "#FFFF00",
+    "weight": 10,
+    "opacity": 0.50
+};
+
+var nodes = [];
+var legs;
+var loadurl="https://localhost:8112/load_object?referrers=true&objects=";
+
+
+function get_itin() {
+var geojsonLayer = new L.GeoJSON.AJAX("https://zblackie.duckdns.org:89/match/v1/driving/2.475464,49.030051;2.47413,49.032182;2.471908,49.034413;2.470286,49.035925;2.467818,49.038255;2.463893,49.037136;2.461177,49.038909;2.458061,49.039011;2.455352,49.038061;2.456222,49.036003;2.458238,49.032927;2.459939,49.030113;2.461505,49.027748;2.462867,49.025752;2.465278,49.022577;2.469837,49.015536;2.471916,49.011337;2.471744,49.007967;2.47186,49.005244;2.47091,49.00254;2.465922,49.001449;2.450593,48.993359;2.451965,48.989907;2.452244,48.986618;2.459081,48.98485;2.456521,48.981896;2.440919,48.983851;2.437014,48.983639;2.43338,48.982779;2.428449,48.981606;2.422902,48.979336;2.421941,48.97594;2.417719,48.973292;2.413947,48.970742;2.410271,48.967554;2.407811,48.965498;2.402717,48.962751;2.398099,48.959087;2.390437,48.953231;2.39056,48.953321;2.384989,48.949594;2.381591,48.948975;2.371206,48.946992;2.364984,48.946563;2.364572,48.941467;2.360792,48.938952;2.355486,48.939312?timestamps=1498980120;1498980180;1498980240;1498980300;1498980360;1498980420;1498980480;1498980540;1498980600;1498980660;1498980720;1498980780;1498980840;1498980900;1498981020;1498981200;1498981260;1498981320;1498981380;1498981440;1498981500;1498981740;1498981860;1498981980;1498982040;1498982160;1498982400;1498982400;1498982460;1498982580;1498982640;1498982760;1498982820;1498982940;1498983060;1498983120;1498983240;1498983420;1498983540;1498983600;1498983780;1498983840;1498983960;1498984020;1498984320;1498984440;1498984560&radiuses=20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20;20&overview=full&geometries=geojson&generate_hints=false&annotations=true",{
+	style:myStyle,
+	middleware:function(data){
+legs = data.matchings[0].legs;
+for(var i in legs) {
+nodes.push(legs[i].annotation.nodes);
+}
+
+for(i=0; i < nodes.length; i++){
+for(j=0; j < nodes[i].length; j++) {
+	loadurl += "n" + nodes[i][j] + ",";
+}
+}
+
+document.getElementById("load_josm").innerHTML = '<a href="'+loadurl+'" target="hide">Load JOSM</a>';
+
+		return data.matchings[0].geometry;
+	}
+});
+
+geojsonLayer.addTo(map);
+};
+
+
+
+map.fitBounds(json.getBounds());
+jj=json.getLayers()[0]._layers;
+
+idx=Object.keys(jj)[0]
+
+//debugger;
+var decorator = L.polylineDecorator(jj[idx]._latlngs, 
+{
+    patterns: [
+            {offset: 25, repeat: 50, symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions: 
+{fillOpacity: 1, weight: 0}})}
+        ]
+}).addTo(map);
+
+// ajout de l'échelle
+L.control.scale().addTo(map);
+
+</script>
+
+
+</body>
+</html>
